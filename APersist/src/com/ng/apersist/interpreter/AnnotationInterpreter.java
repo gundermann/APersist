@@ -49,7 +49,7 @@ public class AnnotationInterpreter {
 		return null;
 	}
 
-	public static String[] getAllColumns() {
+	public static String[] getAllColumns(Class<?> parameterType) {
 		// TODO Auto-generated method stub
 		return null;
 	}

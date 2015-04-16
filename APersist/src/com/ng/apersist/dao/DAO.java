@@ -14,6 +14,7 @@ import com.ng.apersist.Database;
 import com.ng.apersist.ObjectCreator;
 import com.ng.apersist.SQLBuilder;
 import com.ng.apersist.interpreter.AnnotationInterpreter;
+import com.ng.apersist.util.ValueExtractor;
 
 /**
  * Supertype for DAOs. Supplies the insertion, update, delete and selection of
@@ -27,9 +28,9 @@ import com.ng.apersist.interpreter.AnnotationInterpreter;
 public abstract class DAO<T> {
 
 	private Database database;
-	
-	public DAO(){}
-	
+
+	public DAO() {
+	}
 
 	/**
 	 * 
@@ -50,13 +51,13 @@ public abstract class DAO<T> {
 		ObjectCreator<T> oc = new ObjectCreator<T>(getParameterType());
 		Cursor c = database.getWriteableDb().query(
 				AnnotationInterpreter.getTable(getParameterType()),
-				AnnotationInterpreter.getAllColumns(), "", null, null, null,
+				AnnotationInterpreter.getAllColumns(getParameterType()), "", null, null, null,
 				null);
 		if (c.moveToFirst()) {
-			all.add(oc.createNewObject(c));
-			while (c.moveToNext()) {
-				all.add(oc.createNewObject(c));
-			}
+			do {
+				all.add(oc.createNewObject(ValueExtractor.extractToMap(c,
+						getParameterType())));
+			} while (c.moveToNext());
 		}
 		return all;
 	}
@@ -78,16 +79,16 @@ public abstract class DAO<T> {
 	private boolean isIdNotSet(T object) throws IllegalAccessException,
 			IllegalArgumentException, InvocationTargetException {
 		Field idField = AnnotationInterpreter.getIdField(getParameterType());
-		Method getter = AnnotationInterpreter.getGetter(
-				getParameterType().getMethods(), idField);
+		Method getter = AnnotationInterpreter.getGetter(getParameterType()
+				.getMethods(), idField);
 		return getter.invoke(object) == null;
 	}
 
 	private void setIdToObject(T object) throws IllegalAccessException,
 			IllegalArgumentException, InvocationTargetException {
 		Field idField = AnnotationInterpreter.getIdField(getParameterType());
-		Method setter = AnnotationInterpreter.getSetter(
-				getParameterType().getMethods(), idField);
+		Method setter = AnnotationInterpreter.getSetter(getParameterType()
+				.getMethods(), idField);
 		setter.invoke(object, generateNextId());
 
 	}
@@ -105,12 +106,12 @@ public abstract class DAO<T> {
 		List<Field> complexFields = AnnotationInterpreter
 				.getComplexFields(object);
 		for (Field field : complexFields) {
-			Method getter = AnnotationInterpreter.getGetter(
-					getParameterType().getMethods(), field);
+			Method getter = AnnotationInterpreter.getGetter(getParameterType()
+					.getMethods(), field);
 			try {
 				Object subObject = getter.invoke(object);
-				DAO daoForSubType = DaoManager.getInstance().getDaoForType(getter
-						.invoke(object).getClass());
+				DAO daoForSubType = DaoManager.getInstance().getDaoForType(
+						getter.invoke(object).getClass());
 				daoForSubType.insertOrUpdate(subObject);
 			} catch (IllegalAccessException | IllegalArgumentException
 					| InvocationTargetException e) {
@@ -130,8 +131,8 @@ public abstract class DAO<T> {
 	 */
 	public T insertOrUpdate(T object) {
 		Field idField = AnnotationInterpreter.getIdField(getParameterType());
-		Method getter = AnnotationInterpreter.getGetter(
-				getParameterType().getMethods(), idField);
+		Method getter = AnnotationInterpreter.getGetter(getParameterType()
+				.getMethods(), idField);
 		try {
 			Object idFieldValue = getter.invoke(object);
 			if (idFieldValue != null && load(idFieldValue) != null) {
@@ -163,16 +164,17 @@ public abstract class DAO<T> {
 		String idColumn = AnnotationInterpreter.getColumnToField(idField);
 		Map<String, Object> columnToValueMap = new HashMap<String, Object>();
 		columnToValueMap.put(idColumn, idFieldValue);
-		Cursor loaded = database.getWriteableDb().rawQuery(
-				SQLBuilder.createSelectSql(columnToValueMap, getParameterType()),
-				null);
-		if(loaded.moveToFirst())
-			return new ObjectCreator<T>(getParameterType()).createNewObject(loaded);
+		Cursor loaded = database.getWriteableDb()
+				.rawQuery(
+						SQLBuilder.createSelectSql(columnToValueMap,
+								getParameterType()), null);
+		if (loaded.moveToFirst())
+			return new ObjectCreator<T>(getParameterType())
+					.createNewObject(ValueExtractor.extractToMap(loaded, getParameterType()));
 		return null;
 	}
-	
-	abstract protected Class<T> getParameterType();
 
+	abstract protected Class<T> getParameterType();
 
 	public void setDatabase(Database db) {
 		database = db;
