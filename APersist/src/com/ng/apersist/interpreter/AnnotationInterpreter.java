@@ -15,6 +15,7 @@ import com.ng.apersist.annotation.ForeignKey;
 import com.ng.apersist.annotation.Id;
 import com.ng.apersist.annotation.PersistenceClass;
 import com.ng.apersist.annotation.Table;
+import com.ng.apersist.interpreter.util.NoPersistenceClassException;
 
 public class AnnotationInterpreter {
 
@@ -26,8 +27,9 @@ public class AnnotationInterpreter {
 		if (isSimpleField(field)) {
 			return field.getName();
 		}
-		// TODO Auto-generated method stub
-		return null;
+		else{
+			return field.getName() + "_id";
+		}
 	}
 
 	public static boolean isSimpleField(Field field) {
@@ -35,9 +37,13 @@ public class AnnotationInterpreter {
 		return type == String.class || type == Long.class || type == Date.class;
 	}
 
-	public static List<Field> getComplexFields(Object object) {
+	public static List<Field> getComplexFields(Class<?> parameterType) {
 		List<Field> complexFields = new ArrayList<Field>();
-
+		Field[] declaredFields = parameterType.getDeclaredFields();
+		for (int i = 0; i < declaredFields.length; i++) {
+			if(!isSimpleField(declaredFields[i]))
+				complexFields.add(declaredFields[i]);
+		}
 		return complexFields;
 	}
 
@@ -50,20 +56,24 @@ public class AnnotationInterpreter {
 	}
 
 	public static String[] getAllColumns(Class<?> parameterType) {
-		// TODO Auto-generated method stub
-		return null;
+		Field[] declaredFields = parameterType.getDeclaredFields();
+		String[] columns = new String[declaredFields.length];
+		for (int i = 0; i < columns.length; i++) {
+			columns[i] = getColumnToField(declaredFields[i]);
+		}
+		return columns;
 	}
 
-	public static Map<Field, Method> getSetterWithField(Object newInstance) {
+	public static Map<Field, Method> getSetterWithField(Class<?> parameterType) {
 		Map<Field, Method> setterWithColumn = new HashMap<Field, Method>();
-		Field[] fields = newInstance.getClass().getDeclaredFields();
+		Field[] fields = parameterType.getDeclaredFields();
 		for (int i = 0; i < fields.length; i++) {
 			Column columnAnnotation = fields[i].getAnnotation(Column.class);
 			Id idAnnotation = fields[i].getAnnotation(Id.class);
 			if (columnAnnotation != null || idAnnotation != null) {
 				setterWithColumn.put(
 						fields[i],
-						getSetter(newInstance.getClass().getDeclaredMethods(),
+						getSetter(parameterType.getDeclaredMethods(),
 								fields[i]));
 			}
 		}
@@ -83,11 +93,11 @@ public class AnnotationInterpreter {
 		return null;
 	}
 
-	public static String getTable(Class<?> parameterType) {
+	public static String getTable(Class<?> parameterType) throws NoPersistenceClassException {
 		PersistenceClass persistenceClassAnnotation = parameterType
 				.getAnnotation(PersistenceClass.class);
 		if (persistenceClassAnnotation == null) {
-			// Exception
+			throw new NoPersistenceClassException(parameterType);
 		}
 		Table tableAnnotation = parameterType.getAnnotation(Table.class);
 		if (tableAnnotation == null)
@@ -104,7 +114,6 @@ public class AnnotationInterpreter {
 				return methods[i];
 		}
 		return null;
-
 	}
 
 }

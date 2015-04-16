@@ -4,10 +4,11 @@ import java.util.Iterator;
 import java.util.Map;
 
 import com.ng.apersist.interpreter.AnnotationInterpreter;
+import com.ng.apersist.interpreter.util.NoPersistenceClassException;
 
 public class SQLBuilder {
 
-	public static String createInsertSql(Object object) {
+	public static String createInsertSql(Object object) throws NoPersistenceClassException {
 		StringBuilder builder = new StringBuilder("insert into ");
 		builder.append(AnnotationInterpreter.getTable(object.getClass()))
 				.append(" values (");
@@ -16,7 +17,7 @@ public class SQLBuilder {
 		return builder.toString();
 	}
 
-	public static String createUpdateSql(Object object) {
+	public static String createUpdateSql(Object object) throws NoPersistenceClassException {
 		StringBuilder builder = new StringBuilder("update ");
 		builder.append(AnnotationInterpreter.getTable(object.getClass()))
 				.append(" values (");
@@ -31,7 +32,7 @@ public class SQLBuilder {
 	}
 
 	public static String createSelectSql(Map<String, Object> columnToValueMap,
-			Class<?> parameterType) {
+			Class<?> parameterType) throws NoPersistenceClassException {
 		StringBuilder builder = new StringBuilder("select * from ");
 		if (!columnToValueMap.keySet().isEmpty()) {
 			builder.append(AnnotationInterpreter.getTable(parameterType))
@@ -58,7 +59,7 @@ public class SQLBuilder {
 		return sb.toString();
 	}
 
-	public static String createMaxIdSelectionSql(Class<?> parameterType) {
+	public static String createMaxIdSelectionSql(Class<?> parameterType) throws NoPersistenceClassException {
 		StringBuilder builder = new StringBuilder("select MAX(id) from ");
 		builder.append(AnnotationInterpreter.getTable(parameterType)).append(
 				";");

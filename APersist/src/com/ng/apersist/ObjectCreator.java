@@ -34,7 +34,7 @@ public class ObjectCreator<T> {
 
 	private void fillObject(T newInstance, Map<String, String> columnToValueMap) {
 		Map<Field, Method> setters = AnnotationInterpreter
-				.getSetterWithField(newInstance);
+				.getSetterWithField(parameterType);
 		for (Field field : setters.keySet()) {
 			Method setter = setters.get(field);
 			if (AnnotationInterpreter.isForeignKey(field)) {

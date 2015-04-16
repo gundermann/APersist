@@ -9,11 +9,13 @@ import java.util.List;
 import java.util.Map;
 
 import android.database.Cursor;
+import android.util.Log;
 
 import com.ng.apersist.Database;
 import com.ng.apersist.ObjectCreator;
 import com.ng.apersist.SQLBuilder;
 import com.ng.apersist.interpreter.AnnotationInterpreter;
+import com.ng.apersist.interpreter.util.NoPersistenceClassException;
 import com.ng.apersist.util.ValueExtractor;
 
 /**
@@ -49,15 +51,19 @@ public abstract class DAO<T> {
 	public List<T> loadAll() {
 		List<T> all = new ArrayList<T>();
 		ObjectCreator<T> oc = new ObjectCreator<T>(getParameterType());
-		Cursor c = database.getWriteableDb().query(
-				AnnotationInterpreter.getTable(getParameterType()),
-				AnnotationInterpreter.getAllColumns(getParameterType()), "", null, null, null,
-				null);
-		if (c.moveToFirst()) {
-			do {
-				all.add(oc.createNewObject(ValueExtractor.extractToMap(c,
-						getParameterType())));
-			} while (c.moveToNext());
+		try {
+			Cursor c = database.getWriteableDb().query(
+					AnnotationInterpreter.getTable(getParameterType()),
+					AnnotationInterpreter.getAllColumns(getParameterType()),
+					"", null, null, null, null);
+			if (c.moveToFirst()) {
+				do {
+					all.add(oc.createNewObject(ValueExtractor.extractToMap(c,
+							getParameterType())));
+				} while (c.moveToNext());
+			}
+		} catch (NoPersistenceClassException e) {
+			Log.e("Database", e.getMessage());
 		}
 		return all;
 	}
@@ -71,8 +77,12 @@ public abstract class DAO<T> {
 				| InvocationTargetException e) {
 			e.printStackTrace();
 		}
-		database.getWriteableDb().rawQuery(SQLBuilder.createInsertSql(object),
-				null);
+		try {
+			database.getWriteableDb().rawQuery(
+					SQLBuilder.createInsertSql(object), null);
+		} catch (NoPersistenceClassException e) {
+			Log.e("Database", e.getMessage());
+		}
 		return object;
 	}
 
@@ -94,17 +104,22 @@ public abstract class DAO<T> {
 	}
 
 	private Long generateNextId() {
-		Cursor maxIdCursor = database.getWriteableDb().rawQuery(
-				SQLBuilder.createMaxIdSelectionSql(getParameterType()), null);
-		if (maxIdCursor.moveToFirst())
-			return maxIdCursor.getLong(0);
+		try {
+			Cursor maxIdCursor = database.getWriteableDb().rawQuery(
+					SQLBuilder.createMaxIdSelectionSql(getParameterType()),
+					null);
+			if (maxIdCursor.moveToFirst())
+				return maxIdCursor.getLong(0);
+		} catch (NoPersistenceClassException e) {
+			Log.e("Database", e.getMessage());
+		}
 		return 1L;
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private void insertOrUpdateChildren(T object) {
 		List<Field> complexFields = AnnotationInterpreter
-				.getComplexFields(object);
+				.getComplexFields(getParameterType());
 		for (Field field : complexFields) {
 			Method getter = AnnotationInterpreter.getGetter(getParameterType()
 					.getMethods(), field);
@@ -148,8 +163,12 @@ public abstract class DAO<T> {
 
 	private T update(T object) {
 		insertOrUpdateChildren(object);
-		database.getWriteableDb().rawQuery(SQLBuilder.createUpdateSql(object),
-				null);
+		try {
+			database.getWriteableDb().rawQuery(
+					SQLBuilder.createUpdateSql(object), null);
+		} catch (NoPersistenceClassException e) {
+			Log.e("Database", e.getMessage());
+		}
 		return object;
 	}
 
@@ -164,13 +183,17 @@ public abstract class DAO<T> {
 		String idColumn = AnnotationInterpreter.getColumnToField(idField);
 		Map<String, Object> columnToValueMap = new HashMap<String, Object>();
 		columnToValueMap.put(idColumn, idFieldValue);
-		Cursor loaded = database.getWriteableDb()
-				.rawQuery(
-						SQLBuilder.createSelectSql(columnToValueMap,
-								getParameterType()), null);
-		if (loaded.moveToFirst())
-			return new ObjectCreator<T>(getParameterType())
-					.createNewObject(ValueExtractor.extractToMap(loaded, getParameterType()));
+		try {
+			Cursor loaded = database.getWriteableDb().rawQuery(
+					SQLBuilder.createSelectSql(columnToValueMap,
+							getParameterType()), null);
+			if (loaded.moveToFirst())
+				return new ObjectCreator<T>(getParameterType())
+						.createNewObject(ValueExtractor.extractToMap(loaded,
+								getParameterType()));
+		} catch (NoPersistenceClassException e) {
+			Log.e("Database", e.getMessage());
+		}
 		return null;
 	}
 
