@@ -12,10 +12,11 @@ import android.database.Cursor;
 import android.util.Log;
 
 import com.ng.apersist.Database;
+import com.ng.apersist.DatabaseImpl;
 import com.ng.apersist.ObjectCreator;
 import com.ng.apersist.SQLBuilder;
 import com.ng.apersist.interpreter.AnnotationInterpreter;
-import com.ng.apersist.interpreter.util.NoPersistenceClassException;
+import com.ng.apersist.util.NoPersistenceClassException;
 import com.ng.apersist.util.ValueExtractor;
 
 /**
@@ -39,7 +40,7 @@ public abstract class DAO<T> {
 	 * @param database
 	 *            Database to use
 	 */
-	public DAO(Database database) {
+	public DAO(DatabaseImpl database) {
 		this.database = database;
 	}
 
@@ -78,8 +79,7 @@ public abstract class DAO<T> {
 			e.printStackTrace();
 		}
 		try {
-			database.getWriteableDb().rawQuery(
-					SQLBuilder.createInsertSql(object), null);
+			database.execQuery(SQLBuilder.createInsertSql(object));
 		} catch (NoPersistenceClassException e) {
 			Log.e("Database", e.getMessage());
 		}
@@ -104,16 +104,20 @@ public abstract class DAO<T> {
 	}
 
 	private Long generateNextId() {
+		Long maxId = getMaxId();
+		return maxId != null ? maxId + 1 : 0L;
+	}
+
+	public Long getMaxId() {
 		try {
-			Cursor maxIdCursor = database.getWriteableDb().rawQuery(
-					SQLBuilder.createMaxIdSelectionSql(getParameterType()),
-					null);
+			Cursor maxIdCursor = database.execQuery(SQLBuilder
+					.createMaxIdSelectionSql(getParameterType()));
 			if (maxIdCursor.moveToFirst())
 				return maxIdCursor.getLong(0);
 		} catch (NoPersistenceClassException e) {
 			Log.e("Database", e.getMessage());
 		}
-		return 1L;
+		return null;
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -199,7 +203,7 @@ public abstract class DAO<T> {
 
 	abstract protected Class<T> getParameterType();
 
-	public void setDatabase(Database db) {
+	public void setDatabase(DatabaseImpl db) {
 		database = db;
 	}
 

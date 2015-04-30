@@ -3,15 +3,12 @@ package com.ng.apersist;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Map;
 
 import android.util.Log;
 
 import com.ng.apersist.interpreter.AnnotationInterpreter;
+import com.ng.apersist.util.ValueHandler;
 
 public class ObjectCreator<T> {
 
@@ -60,25 +57,10 @@ public class ObjectCreator<T> {
 		else if(type == String.class)
 			return value;
 		else 
-			return convertTypeFromString(type, value);
+			return ValueHandler.convertTypeFromString(type, value);
 	}
 
 
-	//TODO extract to TypeConverter
-	private Object convertTypeFromString(Class<?> type, String stringToConvert) {
-		if(type == Date.class)
-			return convertToDate(stringToConvert);
-		return null;
-	}
 
-	private Date convertToDate(String stringToConvert) {
-		try {
-			DateFormat format = new SimpleDateFormat("dd.MM.yyy-hh:mm:ss");
-			return  format.parse(stringToConvert);
-		} catch (ParseException e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
 
 }

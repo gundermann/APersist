@@ -15,7 +15,7 @@ import com.ng.apersist.annotation.ForeignKey;
 import com.ng.apersist.annotation.Id;
 import com.ng.apersist.annotation.PersistenceClass;
 import com.ng.apersist.annotation.Table;
-import com.ng.apersist.interpreter.util.NoPersistenceClassException;
+import com.ng.apersist.util.NoPersistenceClassException;
 
 public class AnnotationInterpreter {
 
@@ -106,14 +106,37 @@ public class AnnotationInterpreter {
 			return tableAnnotation.name();
 	}
 
+	@SuppressLint("DefaultLocale")
 	public static Method getGetter(Method[] methods, Field field) {
+		String fieldName = field.getName().toLowerCase();
 		for (int i = 0; i < methods.length; i++) {
-			if (methods[i].getName().toLowerCase()
-					.contains(field.getName().toLowerCase())
-					&& methods[i].getName().substring(0, 2).equals("get"))
+			String methodName = methods[i].getName().toLowerCase();
+			if (methodName.substring(0, 3).equals("get")
+					&& methodName.substring(3).equals(fieldName))
 				return methods[i];
 		}
 		return null;
 	}
+
+	public static List<Field> getAllColumnFields(Class<? extends Object> class1) {
+		return null;
+		// TODO Auto-generated method stub
+		
+	}
+
+	public static boolean isIdField(Field field) {
+		return field.getAnnotation(Id.class) != null;
+	}
+
+	public static boolean isAutoincrement(Field field) {
+		Id annotation = field.getAnnotation(Id.class);
+		return annotation.autoincrement();
+	}
+
+	public static String getTargetField(Field field) {
+		ForeignKey annotation = field.getAnnotation(ForeignKey.class);
+		return annotation.targetField();
+	}
+
 
 }

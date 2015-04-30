@@ -1,4 +1,4 @@
-package com.ng.apersist.interpreter.util;
+package com.ng.apersist.util;
 
 public class NoPersistenceClassException extends Exception {
 

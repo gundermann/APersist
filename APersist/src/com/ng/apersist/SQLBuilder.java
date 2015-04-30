@@ -1,23 +1,28 @@
 package com.ng.apersist;
 
+import java.lang.reflect.Field;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import com.ng.apersist.interpreter.AnnotationInterpreter;
-import com.ng.apersist.interpreter.util.NoPersistenceClassException;
+import com.ng.apersist.util.NoPersistenceClassException;
+import com.ng.apersist.util.ValueHandler;
 
 public class SQLBuilder {
 
-	public static String createInsertSql(Object object) throws NoPersistenceClassException {
+	public static String createInsertSql(Object object)
+			throws NoPersistenceClassException {
 		StringBuilder builder = new StringBuilder("insert into ");
 		builder.append(AnnotationInterpreter.getTable(object.getClass()))
-				.append(" values (");
+				.append(" set ");
 		builder.append(createSqlValuesPart(object));
-		builder.append(");");
+		builder.append(";");
 		return builder.toString();
 	}
 
-	public static String createUpdateSql(Object object) throws NoPersistenceClassException {
+	public static String createUpdateSql(Object object)
+			throws NoPersistenceClassException {
 		StringBuilder builder = new StringBuilder("update ");
 		builder.append(AnnotationInterpreter.getTable(object.getClass()))
 				.append(" values (");
@@ -27,8 +32,30 @@ public class SQLBuilder {
 	}
 
 	private static String createSqlValuesPart(Object object) {
-		// TODO Auto-generated method stub
-		return null;
+		StringBuilder sb = new StringBuilder();
+		List<Field> allColumnFields = AnnotationInterpreter
+				.getAllColumnFields(object.getClass());
+		for (Iterator<Field> iterator = allColumnFields.iterator(); iterator
+				.hasNext();) {
+			Field field = iterator.next();
+			String column = AnnotationInterpreter.getColumnToField(field);
+			String value;
+			if (AnnotationInterpreter.isSimpleField(field)) {
+				value = ValueHandler.getDatabaseTypeAsStringFromField(object,
+						field);
+			} else {
+				Object nestedObject = ValueHandler.getValueOfField(object,
+						field);
+				Field idField = AnnotationInterpreter.getIdField(nestedObject
+						.getClass());
+				value = ValueHandler.getDatabaseTypeAsStringFromField(
+						nestedObject, idField);
+			}
+			sb.append(column).append(" = ").append(value);
+			if (iterator.hasNext())
+				sb.append(", ");
+		}
+		return sb.toString();
 	}
 
 	public static String createSelectSql(Map<String, Object> columnToValueMap,
@@ -59,21 +86,65 @@ public class SQLBuilder {
 		return sb.toString();
 	}
 
-	public static String createMaxIdSelectionSql(Class<?> parameterType) throws NoPersistenceClassException {
+	public static String createMaxIdSelectionSql(Class<?> parameterType)
+			throws NoPersistenceClassException {
 		StringBuilder builder = new StringBuilder("select MAX(id) from ");
 		builder.append(AnnotationInterpreter.getTable(parameterType)).append(
 				";");
 		return builder.toString();
 	}
 
-	public static String createCreateSql(Class<?> persistenceClass) {
-		return null;
-		// TODO Auto-generated method stub
-		
+	public static String createCreateSql(Class<?> persistenceClass)
+			throws NoPersistenceClassException {
+		StringBuilder sb = new StringBuilder("create table ");
+		sb.append(AnnotationInterpreter.getTable(persistenceClass))
+				.append(" (");
+		List<Field> allColumnFields = AnnotationInterpreter
+				.getAllColumnFields(persistenceClass);
+		for (Iterator<Field> iterator = allColumnFields.iterator(); iterator
+				.hasNext();) {
+			Field field = iterator.next();
+			Class<?> databaseType = ValueHandler.getDatabaseTypeFor(field
+					.getClass());
+			sb.append(field.getName()).append(" ")
+					.append(databaseType.getSimpleName());
+			sb.append(specificFieldDescription(field));
+			if (iterator.hasNext())
+				sb.append(",");
+		}
+		sb.append(");");
+		return sb.toString();
+	}
+
+	private static String specificFieldDescription(Field field) {
+		StringBuilder sb = new StringBuilder();
+
+		if (AnnotationInterpreter.isIdField(field)) {
+			sb.append(" primary key");
+			if (AnnotationInterpreter.isAutoincrement(field)) {
+				sb.append(" autoincrement");
+			}
+		} else if (AnnotationInterpreter.isForeignKey(field)) {
+			try {
+				sb.append(" references ")
+						.append(AnnotationInterpreter.getTable(field.getClass()))
+						.append(" (")
+						.append(AnnotationInterpreter.getTargetField(field))
+						.append(")");
+			} catch (NoPersistenceClassException e) {
+				e.printStackTrace();
+			}
+		}
+		return sb.toString();
 	}
 
 	public static String createDropSql(Class<?> persistenceClass) {
-		// TODO Auto-generated method stub
-		return null;
+		StringBuilder sb = new StringBuilder("drop table ");
+		try {
+			sb.append(AnnotationInterpreter.getTable(persistenceClass)).append(";");
+		} catch (NoPersistenceClassException e) {
+			e.printStackTrace();
+		}
+		return sb .toString();
 	}
 }
