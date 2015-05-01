@@ -11,17 +11,17 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class SQLiteOpenDbHelper extends SQLiteOpenHelper {
 
-	private Package pkg;
+	private DbRegistry registry;
 
-	public SQLiteOpenDbHelper(Context context, String name, Package pkg,
+	public SQLiteOpenDbHelper(Context context, String name, DbRegistry registry,
 			int version) {
 		super(context, name, null, version);
-		this.pkg = pkg;
+		this.registry = registry;
 	}
 
 	@Override
 	public void onCreate(SQLiteDatabase db) {
-		Set<Class<?>> classes = PersistenceClassCollector.collectFromPath(pkg);
+		Set<Class<?>> classes = PersistenceClassCollector.getFromRegistry(registry);
 		for (Class<?> persistenceClass: classes) {
 			try {
 				db.execSQL(SQLBuilder.createCreateSql(persistenceClass));
@@ -33,7 +33,7 @@ public class SQLiteOpenDbHelper extends SQLiteOpenHelper {
 
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-		Set<Class<?>> classes = PersistenceClassCollector.collectFromPath(pkg);
+		Set<Class<?>> classes = PersistenceClassCollector.getFromRegistry(registry);
 		for (Class<?> persistenceClass: classes) {
 			db.execSQL(SQLBuilder.createDropSql(persistenceClass));
 		}

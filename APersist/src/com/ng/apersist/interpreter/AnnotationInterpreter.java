@@ -26,8 +26,7 @@ public class AnnotationInterpreter {
 	public static String getColumnToField(Field field) {
 		if (isSimpleField(field)) {
 			return field.getName();
-		}
-		else{
+		} else {
 			return field.getName() + "_id";
 		}
 	}
@@ -41,7 +40,7 @@ public class AnnotationInterpreter {
 		List<Field> complexFields = new ArrayList<Field>();
 		Field[] declaredFields = parameterType.getDeclaredFields();
 		for (int i = 0; i < declaredFields.length; i++) {
-			if(!isSimpleField(declaredFields[i]))
+			if (!isSimpleField(declaredFields[i]))
 				complexFields.add(declaredFields[i]);
 		}
 		return complexFields;
@@ -71,10 +70,10 @@ public class AnnotationInterpreter {
 			Column columnAnnotation = fields[i].getAnnotation(Column.class);
 			Id idAnnotation = fields[i].getAnnotation(Id.class);
 			if (columnAnnotation != null || idAnnotation != null) {
-				setterWithColumn.put(
-						fields[i],
-						getSetter(parameterType.getDeclaredMethods(),
-								fields[i]));
+				setterWithColumn
+						.put(fields[i],
+								getSetter(parameterType.getDeclaredMethods(),
+										fields[i]));
 			}
 		}
 
@@ -93,7 +92,8 @@ public class AnnotationInterpreter {
 		return null;
 	}
 
-	public static String getTable(Class<?> parameterType) throws NoPersistenceClassException {
+	public static String getTable(Class<?> parameterType)
+			throws NoPersistenceClassException {
 		PersistenceClass persistenceClassAnnotation = parameterType
 				.getAnnotation(PersistenceClass.class);
 		if (persistenceClassAnnotation == null) {
@@ -118,10 +118,22 @@ public class AnnotationInterpreter {
 		return null;
 	}
 
-	public static List<Field> getAllColumnFields(Class<? extends Object> class1) {
-		return null;
-		// TODO Auto-generated method stub
-		
+	public static List<Field> getAllColumnFields(
+			Class<? extends Object> persistenceClass) {
+		List<Field> columnFields = new ArrayList<Field>();
+		Field[] declaredFields = persistenceClass.getDeclaredFields();
+		for (int i = 0; i < declaredFields.length; i++) {
+			if (isIdField(declaredFields[i]))
+				columnFields.add(declaredFields[i]);
+			else {
+				Column annotation = declaredFields[i]
+						.getAnnotation(Column.class);
+				if (annotation != null)
+					columnFields.add(declaredFields[i]);
+			}
+
+		}
+		return columnFields;
 	}
 
 	public static boolean isIdField(Field field) {
@@ -137,6 +149,5 @@ public class AnnotationInterpreter {
 		ForeignKey annotation = field.getAnnotation(ForeignKey.class);
 		return annotation.targetField();
 	}
-
 
 }

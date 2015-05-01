@@ -51,7 +51,7 @@ public class ValueHandler {
 	}
 
 	private static boolean isNumberType(Class<? extends Object> class1) {
-		return class1.equals(Integer.class) || class1.equals(Long.class)
+		return class1.equals(Integer.class) || class1.getSimpleName().equals("Long")
 				|| class1.equals(int.class) || class1.equals(double.class)
 				|| class1.equals(Double.class);
 	}
@@ -88,7 +88,7 @@ public class ValueHandler {
 
 	public static Class<?> getDatabaseTypeFor(Class<?> parameterType) {
 		if (isNumberType(parameterType))
-			return Long.class;
+			return Integer.class;
 		else if (isDateType(parameterType))
 			return Date.class;
 		else

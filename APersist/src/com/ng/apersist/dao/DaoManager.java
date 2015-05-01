@@ -7,6 +7,7 @@ import java.util.Set;
 import android.util.Log;
 
 import com.ng.apersist.DatabaseImpl;
+import com.ng.apersist.DbRegistry;
 
 public class DaoManager {
 
@@ -14,23 +15,23 @@ public class DaoManager {
 
 	private Map<Class<?>, DAO<?>> daos;
 
-	public static void init(DatabaseImpl db, Package pkg) {
-		manager = new DaoManager(db, pkg);
+
+	public static void init(DatabaseImpl db, DbRegistry registry) {
+		manager = new DaoManager(db, registry);
 	}
 
 	public static DaoManager getInstance() {
 		return manager;
 	}
 
-	public DaoManager(DatabaseImpl db, Package pkg) {
+	public DaoManager(DatabaseImpl db, DbRegistry registry) {
 		daos = new HashMap<Class<?>, DAO<?>>();
-		initDaos(pkg, db);
+		initDaos(registry, db);
 	}
 
-	private void initDaos(Package pkg, DatabaseImpl db) {
-		Set<Class<DAO<?>>> daoClasses = DaoCollector
-				.collectFromPath(pkg);
-		for (Class<DAO<?>> daoClass : daoClasses) {
+	private void initDaos(DbRegistry registry, DatabaseImpl db) {
+		Set<Class<? extends DAO<?>>> daoClasses = registry.getRegistred().keySet();
+		for (Class<? extends DAO<?>> daoClass : daoClasses) {
 			try {
 				DAO<?> dao = daoClass.newInstance();
 				dao.setDatabase(db);

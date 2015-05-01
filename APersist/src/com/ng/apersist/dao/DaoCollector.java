@@ -8,9 +8,9 @@ import com.ng.apersist.util.ClassCollector;
 public class DaoCollector {
 
 	@SuppressWarnings("unchecked")
-	public static Set<Class<DAO<?>>> collectFromPath(Package pkg) {
+	public static Set<Class<DAO<?>>> collectFromPath(Package pkg, String apkName) {
 		Set<Class<DAO<?>>> daosClasses = new HashSet<Class<DAO<?>>>();
-		Set<String> classNames = ClassCollector.collectFromPath(pkg);
+		Set<String> classNames = ClassCollector.collectFromPath(pkg, apkName);
 		for (String className : classNames) {
 			try {
 				Class<?> potentialClass = Class.forName(className);

@@ -105,7 +105,7 @@ public class SQLBuilder {
 				.hasNext();) {
 			Field field = iterator.next();
 			Class<?> databaseType = ValueHandler.getDatabaseTypeFor(field
-					.getClass());
+					.getType());
 			sb.append(field.getName()).append(" ")
 					.append(databaseType.getSimpleName());
 			sb.append(specificFieldDescription(field));
@@ -127,7 +127,7 @@ public class SQLBuilder {
 		} else if (AnnotationInterpreter.isForeignKey(field)) {
 			try {
 				sb.append(" references ")
-						.append(AnnotationInterpreter.getTable(field.getClass()))
+						.append(AnnotationInterpreter.getTable(field.getType()))
 						.append(" (")
 						.append(AnnotationInterpreter.getTargetField(field))
 						.append(")");
@@ -139,12 +139,13 @@ public class SQLBuilder {
 	}
 
 	public static String createDropSql(Class<?> persistenceClass) {
-		StringBuilder sb = new StringBuilder("drop table ");
+		StringBuilder sb = new StringBuilder("drop table if exists ");
 		try {
-			sb.append(AnnotationInterpreter.getTable(persistenceClass)).append(";");
+			sb.append(AnnotationInterpreter.getTable(persistenceClass)).append(
+					";");
 		} catch (NoPersistenceClassException e) {
 			e.printStackTrace();
 		}
-		return sb .toString();
+		return sb.toString();
 	}
 }

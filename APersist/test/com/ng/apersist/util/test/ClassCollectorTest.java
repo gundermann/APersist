@@ -13,7 +13,7 @@ public class ClassCollectorTest {
 
 	@Test
 	public void test() {
-		Set<String> collectedClasses = ClassCollector.collectFromPath(this.getClass().getPackage());
+		Set<String> collectedClasses = ClassCollector.collectFromPath(this.getClass().getPackage(), null);
 		assertTrue(collectedClasses.size() == 4);
 	}
 

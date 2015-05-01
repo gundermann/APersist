@@ -5,6 +5,8 @@ import java.net.URL;
 import java.util.HashSet;
 import java.util.Set;
 
+import dalvik.system.PathClassLoader;
+
 public class ClassCollector {
 
 	public static Set<String> collectFromPath(String path, String pkgName) {
@@ -13,21 +15,31 @@ public class ClassCollector {
 		File[] listFiles = f.listFiles();
 		for (int i = 0; i < listFiles.length; i++) {
 			if (!listFiles[i].isDirectory()) {
-				classNames.add(pkgName + "." + listFiles[i].getName().replace(".class", ""));
+				classNames.add(pkgName + "."
+						+ listFiles[i].getName().replace(".class", ""));
 			} else {
-				classNames.addAll(collectFromPath(listFiles[i]
-						.getAbsolutePath(), pkgName + "." + listFiles[i].getName()));
+				classNames.addAll(collectFromPath(
+						listFiles[i].getAbsolutePath(), pkgName + "."
+								+ listFiles[i].getName()));
 			}
 		}
 		return classNames;
 	}
 
-	public static Set<String> collectFromPath(Package pkg) {
+	public static Set<String> collectFromPath(Package pkg, String apkName) {
 		String pkgName = pkg.getName();
-	    String relPath = pkgName.replace('.', '/');
+		String relPath = pkgName.replace('.', '/');
+		URL resource;
+		if (apkName == null) {
+			resource = ClassLoader.getSystemClassLoader().getResource(relPath);
+		} else {
+			PathClassLoader myClassLoader = new dalvik.system.PathClassLoader(
+					apkName, ClassLoader.getSystemClassLoader());
+			resource = myClassLoader.getResource(relPath);
+		}
 
-	    URL resource = ClassLoader.getSystemClassLoader().getResource(relPath);
 		return collectFromPath(resource.getPath(), pkgName);
+
 	}
 
 }

@@ -16,7 +16,7 @@ public class DaoCollectorTest {
 
 	@Test
 	public void test() {
-		Set<Class<DAO<?>>> collectFromPath = DaoCollector.collectFromPath(this.getClass().getPackage());
+		Set<Class<DAO<?>>> collectFromPath = DaoCollector.collectFromPath(this.getClass().getPackage(), null);
 		assertTrue(collectFromPath.size() == 2);
 		assertTrue(collectFromPath.contains(TestDaoTwo.class));
 		assertTrue(collectFromPath.contains(TestDaoThree.class));
