@@ -18,20 +18,15 @@ import com.ng.apersist.test.mock.ColumnToValueMapCreator;
 import com.ng.apersist.test.testpackage.subpackage.TestClassThree;
 
 @SuppressLint("SimpleDateFormat")
-public class ObjectCreatorTest{
+public class ObjectCreatorTest {
 
 	private static ObjectCreator<TestClassThree> objectCreator;
 	private static Map<String, String> map;
 
-	@BeforeClass
-	public static void setUpBeforeClass() throws Exception {
-		map = ColumnToValueMapCreator.forTestClassTwo();
-		objectCreator = new ObjectCreator<TestClassThree>(TestClassThree.class);
-	}
-
-
 	@Test
 	public void testObjectWithoutForeignKey() {
+		map = ColumnToValueMapCreator.forTestClassTwo();
+		objectCreator = new ObjectCreator<TestClassThree>(TestClassThree.class);
 		TestClassThree object = objectCreator.createNewObject(map);
 		assertTrue(object.getId() == 1L);
 		assertTrue(object.getName().equals("testname"));
@@ -42,6 +37,16 @@ public class ObjectCreatorTest{
 		} catch (ParseException e) {
 			e.printStackTrace();
 		}
+	}
+
+	@Test
+	public void testObjectWithNullValues() {
+		map = ColumnToValueMapCreator.forTestClassTwoWithNull();
+		objectCreator = new ObjectCreator<TestClassThree>(TestClassThree.class);
+		TestClassThree object = objectCreator.createNewObject(map);
+		assertTrue(object.getId() == null);
+		assertTrue(object.getName() == null);
+		assertTrue(object.getTimestamp() == null);
 	}
 
 }

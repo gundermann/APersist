@@ -13,4 +13,12 @@ public class ColumnToValueMapCreator {
 		return map ;
 	}
 
+	public static Map<String, String> forTestClassTwoWithNull() {
+		Map<String, String> map = new HashMap<String, String>();
+		map.put("id", null);
+		map.put("name", null);
+		map.put("timestamp", null);
+		return map ;
+		}
+
 }

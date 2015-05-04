@@ -9,12 +9,14 @@ import java.util.List;
 import java.util.Map;
 
 import android.annotation.SuppressLint;
+import android.util.Log;
 
 import com.ng.apersist.annotation.Column;
 import com.ng.apersist.annotation.ForeignKey;
 import com.ng.apersist.annotation.Id;
 import com.ng.apersist.annotation.PersistenceClass;
 import com.ng.apersist.annotation.Table;
+import com.ng.apersist.util.MethodNotFound;
 import com.ng.apersist.util.NoPersistenceClassException;
 
 public class AnnotationInterpreter {
@@ -24,16 +26,13 @@ public class AnnotationInterpreter {
 	}
 
 	public static String getColumnToField(Field field) {
-		if (isSimpleField(field)) {
-			return field.getName();
-		} else {
-			return field.getName() + "_id";
-		}
+		return field.getName();
 	}
 
 	public static boolean isSimpleField(Field field) {
 		Class<?> type = field.getType();
-		return type == String.class || type == Long.class || type == Date.class;
+		return type == String.class || type == Long.class || type == Date.class
+				|| type == boolean.class;
 	}
 
 	public static List<Field> getComplexFields(Class<?> parameterType) {
@@ -70,10 +69,13 @@ public class AnnotationInterpreter {
 			Column columnAnnotation = fields[i].getAnnotation(Column.class);
 			Id idAnnotation = fields[i].getAnnotation(Id.class);
 			if (columnAnnotation != null || idAnnotation != null) {
-				setterWithColumn
-						.put(fields[i],
-								getSetter(parameterType.getDeclaredMethods(),
-										fields[i]));
+				try {
+					Method getter = getSetter(
+							parameterType.getDeclaredMethods(), fields[i]);
+					setterWithColumn.put(fields[i], getter);
+				} catch (MethodNotFound e) {
+					Log.e(AnnotationInterpreter.class.getName(), e.getMessage());
+				}
 			}
 		}
 
@@ -81,15 +83,17 @@ public class AnnotationInterpreter {
 	}
 
 	@SuppressLint("DefaultLocale")
-	public static Method getSetter(Method[] methods, Field field) {
+	public static Method getSetter(Method[] methods, Field field)
+			throws MethodNotFound {
 		String fieldName = field.getName().toLowerCase();
 		for (int i = 0; i < methods.length; i++) {
 			String methodName = methods[i].getName().toLowerCase();
 			if (methodName.substring(0, 3).equals("set")
-					&& methodName.substring(3).equals(fieldName))
+					&& (methodName.substring(3).equals(fieldName) || methodName
+							.substring(3).equals(fieldName.substring(2))))
 				return methods[i];
 		}
-		return null;
+		throw new MethodNotFound("setter for " + fieldName);
 	}
 
 	public static String getTable(Class<?> parameterType)
@@ -107,15 +111,19 @@ public class AnnotationInterpreter {
 	}
 
 	@SuppressLint("DefaultLocale")
-	public static Method getGetter(Method[] methods, Field field) {
+	public static Method getGetter(Method[] methods, Field field)
+			throws MethodNotFound {
 		String fieldName = field.getName().toLowerCase();
 		for (int i = 0; i < methods.length; i++) {
 			String methodName = methods[i].getName().toLowerCase();
 			if (methodName.substring(0, 3).equals("get")
 					&& methodName.substring(3).equals(fieldName))
 				return methods[i];
+			else if (methodName.substring(0, 2).equals("is")
+					&& methodName.equals(fieldName))
+				return methods[i];
 		}
-		return null;
+		throw new MethodNotFound("getter for " + fieldName);
 	}
 
 	public static List<Field> getAllColumnFields(

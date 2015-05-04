@@ -38,7 +38,9 @@ public class ObjectCreator<T> {
 
 			} else {
 				try {
-					setter.invoke(newInstance, getValueFromMap(columnToValueMap, field));
+					Object valueFromMap = getValueFromMap(columnToValueMap, field);
+					if(valueFromMap != null)
+					setter.invoke(newInstance, valueFromMap);
 				} catch (IllegalAccessException | IllegalArgumentException
 						| InvocationTargetException e) {
 					e.printStackTrace();
@@ -52,7 +54,9 @@ public class ObjectCreator<T> {
 		String column = AnnotationInterpreter.getColumnToField(field);
 		String value = columnToValueMap.get(column);
 		Class<?> type = field.getType();
-		if (type == Long.class)
+		if(value == null)
+			return null;
+		else if (type == Long.class)
 			return Long.valueOf(value);
 		else if(type == String.class)
 			return value;

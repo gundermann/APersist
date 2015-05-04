@@ -14,8 +14,7 @@ public class SQLBuilder {
 	public static String createInsertSql(Object object)
 			throws NoPersistenceClassException {
 		StringBuilder builder = new StringBuilder("insert into ");
-		builder.append(AnnotationInterpreter.getTable(object.getClass()))
-				.append(" set ");
+		builder.append(AnnotationInterpreter.getTable(object.getClass()));
 		builder.append(createSqlValuesPart(object));
 		builder.append(";");
 		return builder.toString();
@@ -24,15 +23,15 @@ public class SQLBuilder {
 	public static String createUpdateSql(Object object)
 			throws NoPersistenceClassException {
 		StringBuilder builder = new StringBuilder("update ");
-		builder.append(AnnotationInterpreter.getTable(object.getClass()))
-				.append(" values (");
+		builder.append(AnnotationInterpreter.getTable(object.getClass()));
 		builder.append(createSqlValuesPart(object));
-		builder.append(");");
+		builder.append(";");
 		return builder.toString();
 	}
 
 	private static String createSqlValuesPart(Object object) {
-		StringBuilder sb = new StringBuilder();
+		StringBuilder sb = new StringBuilder(" (");
+		StringBuilder valuesSb = new StringBuilder(" values (");
 		List<Field> allColumnFields = AnnotationInterpreter
 				.getAllColumnFields(object.getClass());
 		for (Iterator<Field> iterator = allColumnFields.iterator(); iterator
@@ -41,29 +40,34 @@ public class SQLBuilder {
 			String column = AnnotationInterpreter.getColumnToField(field);
 			String value;
 			if (AnnotationInterpreter.isSimpleField(field)) {
-				value = ValueHandler.getDatabaseTypeAsStringFromField(object,
+				value = ValueHandler.getDatabaseTypeAsSQLValueFromField(object,
 						field);
 			} else {
 				Object nestedObject = ValueHandler.getValueOfField(object,
 						field);
 				Field idField = AnnotationInterpreter.getIdField(nestedObject
 						.getClass());
-				value = ValueHandler.getDatabaseTypeAsStringFromField(
+				value = ValueHandler.getDatabaseTypeAsSQLValueFromField(
 						nestedObject, idField);
 			}
-			sb.append(column).append(" = ").append(value);
-			if (iterator.hasNext())
+			
+			sb.append(column);
+			valuesSb.append(value);
+			if (iterator.hasNext()){
 				sb.append(", ");
+				valuesSb.append(", ");
+			}
 		}
-		return sb.toString();
+		valuesSb.append(")");
+		return sb.append(") ").append(valuesSb).toString();
 	}
 
 	public static String createSelectSql(Map<String, Object> columnToValueMap,
 			Class<?> parameterType) throws NoPersistenceClassException {
 		StringBuilder builder = new StringBuilder("select * from ");
-		if (!columnToValueMap.keySet().isEmpty()) {
-			builder.append(AnnotationInterpreter.getTable(parameterType))
-					.append(" where ");
+		builder.append(AnnotationInterpreter.getTable(parameterType));
+		if (columnToValueMap != null && !columnToValueMap.keySet().isEmpty()) {
+					builder.append(" where ");
 			builder.append(createWhereCondition(columnToValueMap));
 		}
 		builder.append(";");

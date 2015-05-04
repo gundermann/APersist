@@ -9,35 +9,44 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import android.annotation.SuppressLint;
+import android.util.Log;
 
+import com.ng.apersist.SQLNullValue;
 import com.ng.apersist.interpreter.AnnotationInterpreter;
 
 public class ValueHandler {
 
 	private static final String DATE_PATTERN = "dd.MM.yyy-hh:mm:ss";
 
-	public static String getDatabaseTypeAsStringFromField(Object object,
+	public static String getDatabaseTypeAsSQLValueFromField(Object object,
 			Field field) {
+		try {
 		Method getter = AnnotationInterpreter.getGetter(object.getClass()
 				.getDeclaredMethods(), field);
-		try {
 			Object objectFromGetter = getter.invoke(object);
 			return convertDatabaseTypeToString(convertTypeToDatabaseType(objectFromGetter));
 		} catch (IllegalAccessException | IllegalArgumentException
-				| InvocationTargetException e) {
-			e.printStackTrace();
+				| InvocationTargetException | MethodNotFound e) {
+			Log.e(ValueHandler.class.getName(), e.getMessage());
 		}
 		return null;
 	}
 
 	private static String convertDatabaseTypeToString(
 			Object convertTypeToDatabaseType) {
+		if(convertTypeToDatabaseType.getClass().equals(String.class))
+			return "\"" + convertTypeToDatabaseType + "\"";
+		else if (convertTypeToDatabaseType.getClass().equals(SQLNullValue.class))
+			return convertTypeToDatabaseType.toString();
 		return String.valueOf(convertTypeToDatabaseType);
 	}
 
 	@SuppressLint("SimpleDateFormat")
 	public static Object convertTypeToDatabaseType(Object type) {
-		if (isNumberType(type.getClass()))
+		if(type == null){
+			return new SQLNullValue();
+		}
+		else if (isNumberType(type.getClass()))
 			return (Long) type;
 		else if (isDateType(type.getClass())) {
 			SimpleDateFormat sdf = new SimpleDateFormat(DATE_PATTERN);
@@ -57,20 +66,22 @@ public class ValueHandler {
 	}
 
 	public static Object getValueOfField(Object object, Field field) {
+		try {
 		Method getter = AnnotationInterpreter.getGetter(object.getClass()
 				.getDeclaredMethods(), field);
-		try {
 			return getter.invoke(object);
 		} catch (IllegalAccessException | IllegalArgumentException
-				| InvocationTargetException e) {
-			e.printStackTrace();
+				| InvocationTargetException | MethodNotFound e) {
+			Log.e(ValueHandler.class.getName(), e.getMessage());
 		}
 		return null;
 	}
 
 	public static Object convertTypeFromString(Class<?> type,
 			String stringToConvert) {
-		if (type == Date.class)
+		if(stringToConvert == null)
+			return null;
+		else if (type == Date.class)
 			return convertToDate(stringToConvert);
 		return null;
 	}

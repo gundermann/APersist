@@ -16,6 +16,7 @@ import com.ng.apersist.DatabaseImpl;
 import com.ng.apersist.ObjectCreator;
 import com.ng.apersist.SQLBuilder;
 import com.ng.apersist.interpreter.AnnotationInterpreter;
+import com.ng.apersist.util.MethodNotFound;
 import com.ng.apersist.util.NoPersistenceClassException;
 import com.ng.apersist.util.ValueExtractor;
 
@@ -53,10 +54,8 @@ public abstract class DAO<T> {
 		List<T> all = new ArrayList<T>();
 		ObjectCreator<T> oc = new ObjectCreator<T>(getParameterType());
 		try {
-			Cursor c = database.getWriteableDb().query(
-					AnnotationInterpreter.getTable(getParameterType()),
-					AnnotationInterpreter.getAllColumns(getParameterType()),
-					"", null, null, null, null);
+			Cursor c = database.getWriteableDb().rawQuery(
+					SQLBuilder.createSelectSql(null, getParameterType()), null);
 			if (c.moveToFirst()) {
 				do {
 					all.add(oc.createNewObject(ValueExtractor.extractToMap(c,
@@ -79,7 +78,8 @@ public abstract class DAO<T> {
 			e.printStackTrace();
 		}
 		try {
-			database.execQuery(SQLBuilder.createInsertSql(object));
+			database.getWriteableDb().execSQL(
+					SQLBuilder.createInsertSql(object));
 		} catch (NoPersistenceClassException e) {
 			Log.e("Database", e.getMessage());
 		}
@@ -89,18 +89,28 @@ public abstract class DAO<T> {
 	private boolean isIdNotSet(T object) throws IllegalAccessException,
 			IllegalArgumentException, InvocationTargetException {
 		Field idField = AnnotationInterpreter.getIdField(getParameterType());
-		Method getter = AnnotationInterpreter.getGetter(getParameterType()
-				.getMethods(), idField);
-		return getter.invoke(object) == null;
+		Method getter;
+		try {
+			getter = AnnotationInterpreter.getGetter(getParameterType()
+					.getMethods(), idField);
+			return getter.invoke(object) == null;
+		} catch (MethodNotFound e) {
+			Log.e(DAO.class.getName(), e.getMessage());
+		}
+		return false;
 	}
 
 	private void setIdToObject(T object) throws IllegalAccessException,
 			IllegalArgumentException, InvocationTargetException {
 		Field idField = AnnotationInterpreter.getIdField(getParameterType());
-		Method setter = AnnotationInterpreter.getSetter(getParameterType()
-				.getMethods(), idField);
-		setter.invoke(object, generateNextId());
-
+		Method setter;
+		try {
+			setter = AnnotationInterpreter.getSetter(getParameterType()
+					.getMethods(), idField);
+			setter.invoke(object, generateNextId());
+		} catch (MethodNotFound e) {
+			Log.e(DAO.class.getName(), e.getMessage());
+		}
 	}
 
 	private Long generateNextId() {
@@ -125,16 +135,16 @@ public abstract class DAO<T> {
 		List<Field> complexFields = AnnotationInterpreter
 				.getComplexFields(getParameterType());
 		for (Field field : complexFields) {
-			Method getter = AnnotationInterpreter.getGetter(getParameterType()
-					.getMethods(), field);
 			try {
+				Method getter = AnnotationInterpreter.getGetter(
+						getParameterType().getMethods(), field);
 				Object subObject = getter.invoke(object);
 				DAO daoForSubType = DaoManager.getInstance().getDaoForType(
 						getter.invoke(object).getClass());
 				daoForSubType.insertOrUpdate(subObject);
 			} catch (IllegalAccessException | IllegalArgumentException
-					| InvocationTargetException e) {
-				e.printStackTrace();
+					| InvocationTargetException | MethodNotFound e) {
+				Log.e(DAO.class.getName(), e.getMessage());
 			}
 		}
 
@@ -150,17 +160,17 @@ public abstract class DAO<T> {
 	 */
 	public T insertOrUpdate(T object) {
 		Field idField = AnnotationInterpreter.getIdField(getParameterType());
-		Method getter = AnnotationInterpreter.getGetter(getParameterType()
-				.getMethods(), idField);
 		try {
+			Method getter = AnnotationInterpreter.getGetter(getParameterType()
+					.getMethods(), idField);
 			Object idFieldValue = getter.invoke(object);
 			if (idFieldValue != null && load(idFieldValue) != null) {
 				return update(object);
 			}
 			return insert(object);
 		} catch (IllegalAccessException | IllegalArgumentException
-				| InvocationTargetException e) {
-			e.printStackTrace();
+				| InvocationTargetException | MethodNotFound e) {
+			Log.e(DAO.class.getName(), e.getMessage());
 		}
 		return null;
 	}
@@ -168,8 +178,8 @@ public abstract class DAO<T> {
 	private T update(T object) {
 		insertOrUpdateChildren(object);
 		try {
-			database.getWriteableDb().rawQuery(
-					SQLBuilder.createUpdateSql(object), null);
+			database.getWriteableDb().execSQL(
+					SQLBuilder.createUpdateSql(object));
 		} catch (NoPersistenceClassException e) {
 			Log.e("Database", e.getMessage());
 		}
