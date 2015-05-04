@@ -21,8 +21,8 @@ public class ValueHandler {
 	public static String getDatabaseTypeAsSQLValueFromField(Object object,
 			Field field) {
 		try {
-		Method getter = AnnotationInterpreter.getGetter(object.getClass()
-				.getDeclaredMethods(), field);
+			Method getter = AnnotationInterpreter.getGetter(object.getClass()
+					.getDeclaredMethods(), field);
 			Object objectFromGetter = getter.invoke(object);
 			return convertDatabaseTypeToString(convertTypeToDatabaseType(objectFromGetter));
 		} catch (IllegalAccessException | IllegalArgumentException
@@ -34,19 +34,19 @@ public class ValueHandler {
 
 	private static String convertDatabaseTypeToString(
 			Object convertTypeToDatabaseType) {
-		if(convertTypeToDatabaseType.getClass().equals(String.class))
+		if (convertTypeToDatabaseType.getClass().equals(String.class))
 			return "\"" + convertTypeToDatabaseType + "\"";
-		else if (convertTypeToDatabaseType.getClass().equals(SQLNullValue.class))
+		else if (convertTypeToDatabaseType.getClass()
+				.equals(SQLNullValue.class))
 			return convertTypeToDatabaseType.toString();
 		return String.valueOf(convertTypeToDatabaseType);
 	}
 
 	@SuppressLint("SimpleDateFormat")
 	public static Object convertTypeToDatabaseType(Object type) {
-		if(type == null){
+		if (type == null) {
 			return new SQLNullValue();
-		}
-		else if (isNumberType(type.getClass()))
+		} else if (isNumberType(type.getClass()))
 			return (Long) type;
 		else if (isDateType(type.getClass())) {
 			SimpleDateFormat sdf = new SimpleDateFormat(DATE_PATTERN);
@@ -60,15 +60,16 @@ public class ValueHandler {
 	}
 
 	private static boolean isNumberType(Class<? extends Object> class1) {
-		return class1.equals(Integer.class) || class1.getSimpleName().equals("Long")
+		return class1.equals(Integer.class)
+				|| class1.getSimpleName().equals("Long")
 				|| class1.equals(int.class) || class1.equals(double.class)
 				|| class1.equals(Double.class);
 	}
 
 	public static Object getValueOfField(Object object, Field field) {
 		try {
-		Method getter = AnnotationInterpreter.getGetter(object.getClass()
-				.getDeclaredMethods(), field);
+			Method getter = AnnotationInterpreter.getGetter(object.getClass()
+					.getDeclaredMethods(), field);
 			return getter.invoke(object);
 		} catch (IllegalAccessException | IllegalArgumentException
 				| InvocationTargetException | MethodNotFound e) {
@@ -79,10 +80,31 @@ public class ValueHandler {
 
 	public static Object convertTypeFromString(Class<?> type,
 			String stringToConvert) {
-		if(stringToConvert == null)
+		if (stringToConvert == null)
 			return null;
+		else if (type.isEnum())
+			return convertToEnum(type, stringToConvert);
 		else if (type == Date.class)
 			return convertToDate(stringToConvert);
+		else if (type == Long.class)
+			return Long.valueOf(stringToConvert);
+		else if (type == String.class)
+			return stringToConvert;
+		else if (type == Boolean.class)
+			return Boolean.valueOf(stringToConvert);
+		// then it is complex
+		return Long.valueOf(stringToConvert);
+	}
+
+	private static Object convertToEnum(Class<?> enumType,
+			String stringToConvert) {
+		Object[] enumConstants = enumType.getEnumConstants();
+		for(int i = 0; i<enumConstants.length;i++){
+			if(enumConstants[i].toString().equals(stringToConvert))
+				return enumConstants[i];
+		}
+		
+		//TODO exception
 		return null;
 	}
 

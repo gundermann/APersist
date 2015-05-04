@@ -7,6 +7,8 @@ import java.util.Map;
 
 import android.util.Log;
 
+import com.ng.apersist.dao.DAO;
+import com.ng.apersist.dao.DaoManager;
 import com.ng.apersist.interpreter.AnnotationInterpreter;
 import com.ng.apersist.util.ValueHandler;
 
@@ -34,17 +36,20 @@ public class ObjectCreator<T> {
 				.getSetterWithField(parameterType);
 		for (Field field : setters.keySet()) {
 			Method setter = setters.get(field);
-			if (AnnotationInterpreter.isForeignKey(field)) {
-
-			} else {
-				try {
-					Object valueFromMap = getValueFromMap(columnToValueMap, field);
-					if(valueFromMap != null)
-					setter.invoke(newInstance, valueFromMap);
-				} catch (IllegalAccessException | IllegalArgumentException
-						| InvocationTargetException e) {
-					e.printStackTrace();
+			try {
+				Object value;
+				if (AnnotationInterpreter.isForeignKey(field)) {
+					DAO<?> daoForSubtype = DaoManager.getInstance()
+							.getDaoForType(field.getType());
+					value = daoForSubtype.load(getValueFromMap(
+							columnToValueMap, field));
+				} else {
+					value = getValueFromMap(columnToValueMap, field);
 				}
+				setter.invoke(newInstance, value);
+			} catch (IllegalAccessException | IllegalArgumentException
+					| InvocationTargetException e) {
+				e.printStackTrace();
 			}
 		}
 	}
@@ -54,17 +59,7 @@ public class ObjectCreator<T> {
 		String column = AnnotationInterpreter.getColumnToField(field);
 		String value = columnToValueMap.get(column);
 		Class<?> type = field.getType();
-		if(value == null)
-			return null;
-		else if (type == Long.class)
-			return Long.valueOf(value);
-		else if(type == String.class)
-			return value;
-		else 
-			return ValueHandler.convertTypeFromString(type, value);
+		return ValueHandler.convertTypeFromString(type, value);
 	}
-
-
-
 
 }
