@@ -1,6 +1,7 @@
 package com.ng.apersist;
 
 import java.lang.reflect.Field;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +21,18 @@ public class SQLBuilder {
 		return builder.toString();
 	}
 
+	public static String createDeleteSql(Object object) throws NoPersistenceClassException{
+		StringBuilder sb = new StringBuilder("delete * from ");
+		sb.append(AnnotationInterpreter.getTable(object.getClass()));
+		Map<String, Object> columnToValueMap = new HashMap<String, Object>();
+		Field idField = AnnotationInterpreter.getIdField(object.getClass());
+		Object value = ValueHandler.getValueOfField(object, idField);
+		columnToValueMap.put(AnnotationInterpreter.getColumnToField(idField), value );
+		sb.append(createWhereCondition(columnToValueMap));
+		sb.append(";");
+		return sb.toString();
+	}
+	
 	public static String createUpdateSql(Object object)
 			throws NoPersistenceClassException {
 		StringBuilder builder = new StringBuilder("update ");

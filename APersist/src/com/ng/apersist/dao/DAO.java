@@ -68,6 +68,17 @@ public abstract class DAO<T> {
 		return all;
 	}
 
+	public boolean delete(T object) {
+		try {
+			database.getWriteableDb().rawQuery(
+					SQLBuilder.createDeleteSql(object), null);
+			return true;
+		} catch (NoPersistenceClassException e) {
+			Log.e("Database", e.getMessage());
+		}
+		return false;
+	}
+
 	private T insert(T object) {
 		insertOrUpdateChildren(object);
 		try {

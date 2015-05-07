@@ -5,8 +5,6 @@ import java.net.URL;
 import java.util.HashSet;
 import java.util.Set;
 
-import dalvik.system.PathClassLoader;
-
 public class ClassCollector {
 
 	public static Set<String> collectFromPath(String path, String pkgName) {
@@ -30,13 +28,13 @@ public class ClassCollector {
 		String pkgName = pkg.getName();
 		String relPath = pkgName.replace('.', '/');
 		URL resource;
-		if (apkName == null) {
+//		if (apkName == null) {
 			resource = ClassLoader.getSystemClassLoader().getResource(relPath);
-		} else {
-			PathClassLoader myClassLoader = new dalvik.system.PathClassLoader(
-					apkName, ClassLoader.getSystemClassLoader());
-			resource = myClassLoader.getResource(relPath);
-		}
+//		} else {
+//			PathClassLoader myClassLoader = new dalvik.system.PathClassLoader(
+//					apkName, ClassLoader.getSystemClassLoader());
+//			resource = myClassLoader.getResource(relPath);
+//		}
 
 		return collectFromPath(resource.getPath(), pkgName);
 
