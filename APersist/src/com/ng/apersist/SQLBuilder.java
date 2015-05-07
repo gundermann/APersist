@@ -22,8 +22,8 @@ public class SQLBuilder {
 	}
 
 	public static String createDeleteSql(Object object) throws NoPersistenceClassException{
-		StringBuilder sb = new StringBuilder("delete * from ");
-		sb.append(AnnotationInterpreter.getTable(object.getClass()));
+		StringBuilder sb = new StringBuilder("delete from ");
+		sb.append(AnnotationInterpreter.getTable(object.getClass())).append(" where ");
 		Map<String, Object> columnToValueMap = new HashMap<String, Object>();
 		Field idField = AnnotationInterpreter.getIdField(object.getClass());
 		Object value = ValueHandler.getValueOfField(object, idField);
