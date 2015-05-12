@@ -32,7 +32,7 @@ public class ValueHandler {
 		return null;
 	}
 
-	private static String convertDatabaseTypeToString(
+	public static String convertDatabaseTypeToString(
 			Object convertTypeToDatabaseType) {
 		if (convertTypeToDatabaseType.getClass().equals(String.class))
 			return "\"" + convertTypeToDatabaseType + "\"";

@@ -95,7 +95,7 @@ public class SQLBuilder {
 				.hasNext();) {
 			String column = iterator.next();
 			sb.append(column).append(" = ")
-					.append(columnToValueMap.get(column));
+					.append(ValueHandler.convertDatabaseTypeToString(columnToValueMap.get(column)));
 			if (iterator.hasNext()) {
 				sb.append(", ");
 			}
