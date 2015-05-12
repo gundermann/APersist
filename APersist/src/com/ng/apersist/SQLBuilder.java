@@ -37,11 +37,40 @@ public class SQLBuilder {
 			throws NoPersistenceClassException {
 		StringBuilder builder = new StringBuilder("update ");
 		builder.append(AnnotationInterpreter.getTable(object.getClass()));
-		builder.append(createSqlValuesPart(object));
+		builder.append(createSqlValuesUpdatePart(object));
 		builder.append(";");
 		return builder.toString();
 	}
 
+	private static String createSqlValuesUpdatePart(Object object) {
+		StringBuilder sb = new StringBuilder(" set  ");
+		List<Field> allColumnFields = AnnotationInterpreter
+				.getAllColumnFields(object.getClass());
+		for (Iterator<Field> iterator = allColumnFields.iterator(); iterator
+				.hasNext();) {
+			Field field = iterator.next();
+			String column = AnnotationInterpreter.getColumnToField(field);
+			String value;
+			if (AnnotationInterpreter.isSimpleField(field)) {
+				value = ValueHandler.getDatabaseTypeAsSQLValueFromField(object,
+						field);
+			} else {
+				Object nestedObject = ValueHandler.getValueOfField(object,
+						field);
+				Field idField = AnnotationInterpreter.getIdField(nestedObject
+						.getClass());
+				value = ValueHandler.getDatabaseTypeAsSQLValueFromField(
+						nestedObject, idField);
+			}
+			
+			sb.append(column).append(" = ").append(value);
+			if (iterator.hasNext()){
+				sb.append(", ");
+			}
+		}
+		return sb.toString();
+	}
+	
 	private static String createSqlValuesPart(Object object) {
 		StringBuilder sb = new StringBuilder(" (");
 		StringBuilder valuesSb = new StringBuilder(" values (");
