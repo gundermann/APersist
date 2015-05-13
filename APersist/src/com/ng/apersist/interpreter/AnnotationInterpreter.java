@@ -32,7 +32,7 @@ public class AnnotationInterpreter {
 	public static boolean isSimpleField(Field field) {
 		Class<?> type = field.getType();
 		return type == String.class || type == Long.class || type == Date.class
-				|| type == boolean.class;
+				|| type == boolean.class || type.isEnum();
 	}
 
 	public static List<Field> getComplexFields(Class<?> parameterType) {
@@ -44,6 +44,8 @@ public class AnnotationInterpreter {
 		}
 		return complexFields;
 	}
+
+
 
 	public static Field getIdField(Class<?> parameterType) {
 		for (Field field : parameterType.getDeclaredFields()) {
@@ -155,7 +157,9 @@ public class AnnotationInterpreter {
 
 	public static String getTargetField(Field field) {
 		ForeignKey annotation = field.getAnnotation(ForeignKey.class);
-		return annotation.targetField();
+//		return annotation.targetField();
+		//TODO get idField
+		return null;
 	}
 
 }

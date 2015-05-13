@@ -21,18 +21,21 @@ public class SQLBuilder {
 		return builder.toString();
 	}
 
-	public static String createDeleteSql(Object object) throws NoPersistenceClassException{
+	public static String createDeleteSql(Object object)
+			throws NoPersistenceClassException {
 		StringBuilder sb = new StringBuilder("delete from ");
-		sb.append(AnnotationInterpreter.getTable(object.getClass())).append(" where ");
+		sb.append(AnnotationInterpreter.getTable(object.getClass())).append(
+				" where ");
 		Map<String, Object> columnToValueMap = new HashMap<String, Object>();
 		Field idField = AnnotationInterpreter.getIdField(object.getClass());
 		Object value = ValueHandler.getValueOfField(object, idField);
-		columnToValueMap.put(AnnotationInterpreter.getColumnToField(idField), value );
+		columnToValueMap.put(AnnotationInterpreter.getColumnToField(idField),
+				value);
 		sb.append(createWhereCondition(columnToValueMap));
 		sb.append(";");
 		return sb.toString();
 	}
-	
+
 	public static String createUpdateSql(Object object)
 			throws NoPersistenceClassException {
 		StringBuilder builder = new StringBuilder("update ");
@@ -57,20 +60,24 @@ public class SQLBuilder {
 			} else {
 				Object nestedObject = ValueHandler.getValueOfField(object,
 						field);
-				Field idField = AnnotationInterpreter.getIdField(nestedObject
-						.getClass());
-				value = ValueHandler.getDatabaseTypeAsSQLValueFromField(
-						nestedObject, idField);
+				if (nestedObject != null) {
+					Field idField = AnnotationInterpreter
+							.getIdField(nestedObject.getClass());
+					value = ValueHandler.getDatabaseTypeAsSQLValueFromField(
+							nestedObject, idField);
+				} else {
+					value = null;
+				}
 			}
-			
+
 			sb.append(column).append(" = ").append(value);
-			if (iterator.hasNext()){
+			if (iterator.hasNext()) {
 				sb.append(", ");
 			}
 		}
 		return sb.toString();
 	}
-	
+
 	private static String createSqlValuesPart(Object object) {
 		StringBuilder sb = new StringBuilder(" (");
 		StringBuilder valuesSb = new StringBuilder(" values (");
@@ -87,15 +94,19 @@ public class SQLBuilder {
 			} else {
 				Object nestedObject = ValueHandler.getValueOfField(object,
 						field);
-				Field idField = AnnotationInterpreter.getIdField(nestedObject
-						.getClass());
-				value = ValueHandler.getDatabaseTypeAsSQLValueFromField(
-						nestedObject, idField);
+				if (nestedObject != null) {
+					Field idField = AnnotationInterpreter
+							.getIdField(nestedObject.getClass());
+					value = ValueHandler.getDatabaseTypeAsSQLValueFromField(
+							nestedObject, idField);
+				} else {
+					value = null;
+				}
 			}
-			
+
 			sb.append(column);
 			valuesSb.append(value);
-			if (iterator.hasNext()){
+			if (iterator.hasNext()) {
 				sb.append(", ");
 				valuesSb.append(", ");
 			}
@@ -109,7 +120,7 @@ public class SQLBuilder {
 		StringBuilder builder = new StringBuilder("select * from ");
 		builder.append(AnnotationInterpreter.getTable(parameterType));
 		if (columnToValueMap != null && !columnToValueMap.keySet().isEmpty()) {
-					builder.append(" where ");
+			builder.append(" where ");
 			builder.append(createWhereCondition(columnToValueMap));
 		}
 		builder.append(";");
@@ -123,8 +134,11 @@ public class SQLBuilder {
 		for (Iterator<String> iterator = columnToValueMap.keySet().iterator(); iterator
 				.hasNext();) {
 			String column = iterator.next();
-			sb.append(column).append(" = ")
-					.append(ValueHandler.convertDatabaseTypeToString(columnToValueMap.get(column)));
+			sb.append(column)
+					.append(" = ")
+					.append(ValueHandler
+							.convertDatabaseTypeToString(columnToValueMap
+									.get(column)));
 			if (iterator.hasNext()) {
 				sb.append(", ");
 			}

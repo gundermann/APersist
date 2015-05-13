@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 @Retention(value = RetentionPolicy.RUNTIME)
 public @interface ForeignKey {
 
-	String targetField();
+//	String targetField();
 	
 	
 }
