@@ -47,7 +47,7 @@ public class ValueHandler {
 		if (type == null) {
 			return new SQLNullValue();
 		} else if (isNumberType(type.getClass()))
-			return (Long) type;
+			return (Number) type;
 		else if (isDateType(type.getClass())) {
 			SimpleDateFormat sdf = new SimpleDateFormat(DATE_PATTERN);
 			return sdf.format((Date) type);
