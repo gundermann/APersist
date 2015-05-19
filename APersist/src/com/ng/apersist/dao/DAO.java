@@ -12,7 +12,6 @@ import android.database.Cursor;
 import android.util.Log;
 
 import com.ng.apersist.Database;
-import com.ng.apersist.DatabaseImpl;
 import com.ng.apersist.ObjectCreator;
 import com.ng.apersist.SQLBuilder;
 import com.ng.apersist.interpreter.AnnotationInterpreter;
@@ -41,7 +40,7 @@ public abstract class DAO<T> {
 	 * @param database
 	 *            Database to use
 	 */
-	public DAO(DatabaseImpl database) {
+	public DAO(Database database) {
 		this.database = database;
 	}
 
@@ -224,7 +223,7 @@ public abstract class DAO<T> {
 
 	abstract protected Class<T> getParameterType();
 
-	public void setDatabase(DatabaseImpl db) {
+	public void setDatabase(Database db) {
 		database = db;
 	}
 
