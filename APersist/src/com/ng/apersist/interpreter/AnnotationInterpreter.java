@@ -16,6 +16,10 @@ import com.ng.apersist.annotation.ForeignKey;
 import com.ng.apersist.annotation.Id;
 import com.ng.apersist.annotation.PersistenceClass;
 import com.ng.apersist.annotation.Table;
+import com.ng.apersist.annotation.ToMany;
+import com.ng.apersist.annotation.ToManyMinOne;
+import com.ng.apersist.annotation.ToOne;
+import com.ng.apersist.annotation.ToOneOrNone;
 import com.ng.apersist.util.MethodNotFound;
 import com.ng.apersist.util.NoPersistenceClassException;
 
@@ -159,6 +163,18 @@ public class AnnotationInterpreter {
 		// return annotation.targetField();
 		// TODO get idField
 		return null;
+	}
+
+	public static boolean isToOne(Field field) {
+		return (field.getAnnotation(ToOne.class) != null || field.getAnnotation(ToOneOrNone.class) != null);
+	}
+
+	public static boolean isMinOne(Field field) {
+		return (field.getAnnotation(ToManyMinOne.class) != null || field.getAnnotation(ToOne.class) != null);
+	}
+
+	public static boolean isToMany(Field field) {
+		return (field.getAnnotation(ToManyMinOne.class) != null || field.getAnnotation(ToMany.class) != null);
 	}
 
 }
