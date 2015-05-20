@@ -37,7 +37,7 @@ public class SQLiteOpenDbHelper extends SQLiteOpenHelper {
 				db.execSQL(sql);
 			}
 		} catch (SQLException | NoPersistenceClassException e) {
-			Log.e("DB", e.getMessage());
+			Log.e("DB creation", e.getMessage());
 		}
 	}
 
@@ -57,7 +57,7 @@ public class SQLiteOpenDbHelper extends SQLiteOpenHelper {
 				db.execSQL(sql);
 			}
 		} catch (SQLException | NoPersistenceClassException e) {
-			Log.e("DB", e.getMessage());
+			Log.e("DB update", e.getMessage());
 		}
 		onCreate(db);
 	}

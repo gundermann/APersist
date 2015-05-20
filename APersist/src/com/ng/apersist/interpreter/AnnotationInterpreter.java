@@ -166,19 +166,40 @@ public class AnnotationInterpreter {
 	}
 
 	public static boolean isToOne(Field field) {
-		return (field.getAnnotation(ToOne.class) != null || field.getAnnotation(ToOneOrNone.class) != null);
+		return (field.getAnnotation(ToOne.class) != null || field
+				.getAnnotation(ToOneOrNone.class) != null);
 	}
 
 	public static boolean isMinOne(Field field) {
-		return (field.getAnnotation(ToManyMinOne.class) != null || field.getAnnotation(ToOne.class) != null);
+		return (field.getAnnotation(ToManyMinOne.class) != null || field
+				.getAnnotation(ToOne.class) != null);
 	}
 
 	public static boolean isToMany(Field field) {
-		return (field.getAnnotation(ToManyMinOne.class) != null || field.getAnnotation(ToMany.class) != null);
+		return (field.getAnnotation(ToManyMinOne.class) != null || field
+				.getAnnotation(ToMany.class) != null);
 	}
 
 	public static String getIdColumn(Class<?> persistenceClass) {
 		return getColumnToField(getIdField(persistenceClass));
+	}
+
+	public static ToMany getToManyAnnotation(Field field) {
+		return field.getAnnotation(ToMany.class);
+	}
+
+	public static List<Field> getToManyFields(Class<?> persistenceClass) {
+		List<Field> columnFields = new ArrayList<Field>();
+		Field[] declaredFields = persistenceClass.getDeclaredFields();
+		for (int i = 0; i < declaredFields.length; i++) {
+				ToMany toManyAnnotation = declaredFields[i]
+						.getAnnotation(ToMany.class);
+				ToManyMinOne toManyMinOneAnnotation = declaredFields[i]
+						.getAnnotation(ToManyMinOne.class);
+				if (toManyAnnotation != null || toManyMinOneAnnotation != null)
+					columnFields.add(declaredFields[i]);
+		}
+		return columnFields;
 	}
 
 }
