@@ -300,4 +300,16 @@ public class SQLBuilder {
 		}
 		return helperDropSqls;
 	}
+
+	public static String createSelectSql(Map<String, Object> columnToValueMap,
+			String table) {
+		StringBuilder builder = new StringBuilder("select * from ");
+		builder.append(table);
+		if (columnToValueMap != null && !columnToValueMap.keySet().isEmpty()) {
+			builder.append(" where ");
+			builder.append(createWhereCondition(columnToValueMap));
+		}
+		builder.append(";");
+		return builder.toString();
+	}
 }

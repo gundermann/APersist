@@ -18,6 +18,7 @@ public class DaoManager {
 
 	public static void init(Database db, DbRegistry registry) {
 		manager = new DaoManager(db, registry);
+		Log.i("DaoManager", "init DaoManager");
 	}
 
 	public static DaoManager getInstance() {

@@ -177,4 +177,8 @@ public class AnnotationInterpreter {
 		return (field.getAnnotation(ToManyMinOne.class) != null || field.getAnnotation(ToMany.class) != null);
 	}
 
+	public static String getIdColumn(Class<?> persistenceClass) {
+		return getColumnToField(getIdField(persistenceClass));
+	}
+
 }

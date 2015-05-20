@@ -14,6 +14,7 @@ class DatabaseImpl implements Database {
 	public DatabaseImpl(Context context, String name, DbRegistry registry, int version) {
 		helper = new SQLiteOpenDbHelper(context, name, registry, version );
 		DaoManager.init(this, registry);
+		HelperDaoManager.init(this, registry);
 	}
 
 

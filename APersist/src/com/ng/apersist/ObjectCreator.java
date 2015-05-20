@@ -3,6 +3,7 @@ package com.ng.apersist;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Collection;
 import java.util.Map;
 
 import android.util.Log;
@@ -38,12 +39,15 @@ public class ObjectCreator<T> {
 			Method setter = setters.get(field);
 			try {
 				Object value;
-				if (AnnotationInterpreter.isForeignKey(field)) {
+				if (AnnotationInterpreter.isToOne(field)) {
 					DAO<?> daoForSubtype = DaoManager.getInstance()
 							.getDaoForType(field.getType());
 					value = daoForSubtype.load(getValueFromMap(
 							columnToValueMap, field));
-				} else {
+				} else if(AnnotationInterpreter.isToMany(field)){
+					value = getCollectionOfToManyTarget(columnToValueMap, field);
+				}
+				else {
 					value = getValueFromMap(columnToValueMap, field);
 				}
 				setter.invoke(newInstance, value);
@@ -52,6 +56,19 @@ public class ObjectCreator<T> {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	private Collection<?> getCollectionOfToManyTarget(
+			Map<String, String> columnToValueMap, Field field) {
+		String table = "";
+		for (String tablename : columnToValueMap.keySet()) {
+			if(tablename.contains("2" + field.getType().getTypeParameters()[0])){
+				table = tablename;
+				break;
+			}
+		}
+		String id = columnToValueMap.get(table);
+		return HelperDaoManager.getDAOForTable(table).loadAll(id);
 	}
 
 	private Object getValueFromMap(Map<String, String> columnToValueMap,
