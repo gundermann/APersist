@@ -206,10 +206,10 @@ public class SQLBuilder {
 		return sb.toString();
 	}
 
-	public static String createDropSql(Class<?> persistenceClass) throws NoPersistenceClassException {
+	public static String createDropSql(Class<?> persistenceClass)
+			throws NoPersistenceClassException {
 		StringBuilder sb = new StringBuilder("drop table if exists ");
-			sb.append(AnnotationInterpreter.getTable(persistenceClass)).append(
-					";");
+		sb.append(AnnotationInterpreter.getTable(persistenceClass)).append(";");
 		return sb.toString();
 	}
 
@@ -234,43 +234,38 @@ public class SQLBuilder {
 	private static List<String> createHelperCreateSql(Class<?> persistenceClass)
 			throws NoPersistenceClassException {
 		List<String> sqls = new ArrayList<String>();
-		List<Field> allToManyFields = AnnotationInterpreter.getToManyFields(persistenceClass);
+		List<Field> allToManyFields = AnnotationInterpreter
+				.getToManyFields(persistenceClass);
 		for (Iterator<Field> iterator = allToManyFields.iterator(); iterator
 				.hasNext();) {
 			Field field = iterator.next();
-				StringBuilder sb = new StringBuilder("create table ");
-				ToMany annotation = AnnotationInterpreter
-						.getToManyAnnotation(field);
-				sb.append(AnnotationInterpreter.getTable(persistenceClass))
-						.append("2")
-						.append(AnnotationInterpreter.getTable(annotation
-								.target())).append("( ");
-				sb.append("id integer primary key, ")
-						.append(AnnotationInterpreter
-								.getTable(persistenceClass))
-						.append("_id")
-						.append(" integer ")
-						.append("references ")
-						.append(AnnotationInterpreter
-								.getTable(persistenceClass))
-						.append(" (")
-						.append(AnnotationInterpreter
-								.getIdColumn(persistenceClass))
-						.append(")")
-						.append(", ")
-						.append(AnnotationInterpreter.getTable(annotation
-								.target()))
-						.append("_id")
-						.append(" integer ")
-						.append("references ")
-						.append(AnnotationInterpreter.getTable(annotation
-								.target()))
-						.append(" (")
-						.append(AnnotationInterpreter.getIdColumn(annotation
-								.target())).append(")");
+			StringBuilder sb = new StringBuilder("create table ");
+			ToMany annotation = AnnotationInterpreter
+					.getToManyAnnotation(field);
+			sb.append(
+					AnnotationInterpreter.getHelperTable(persistenceClass,
+							field)).append("( ");
+			sb.append("id integer primary key, ")
+					.append(AnnotationInterpreter.getTable(persistenceClass))
+					.append("_id")
+					.append(" integer ")
+					.append("references ")
+					.append(AnnotationInterpreter.getTable(persistenceClass))
+					.append(" (")
+					.append(AnnotationInterpreter.getIdColumn(persistenceClass))
+					.append(")")
+					.append(", ")
+					.append(AnnotationInterpreter.getTable(annotation.target()))
+					.append("_id")
+					.append(" integer ")
+					.append("references ")
+					.append(AnnotationInterpreter.getTable(annotation.target()))
+					.append(" (")
+					.append(AnnotationInterpreter.getIdColumn(annotation
+							.target())).append(")");
 
-				sb.append(");");
-				sqls.add(sb.toString());
+			sb.append(");");
+			sqls.add(sb.toString());
 		}
 
 		return sqls;
@@ -303,12 +298,10 @@ public class SQLBuilder {
 				.hasNext();) {
 			Field field = iterator.next();
 			if (AnnotationInterpreter.isToMany(field)) {
-				ToMany annotation = AnnotationInterpreter.getToManyAnnotation(field);
 				StringBuilder sb = new StringBuilder("drop table if exists ");
-				sb.append(AnnotationInterpreter.getTable(persistenceClass))
-						.append("2")
-						.append(AnnotationInterpreter.getTable(annotation.target()))
-						.append(";");
+				sb.append(
+						AnnotationInterpreter.getHelperTable(persistenceClass,
+								field)).append(";");
 				helperDropSqls.add(sb.toString());
 			}
 		}
@@ -325,5 +318,16 @@ public class SQLBuilder {
 		}
 		builder.append(";");
 		return builder.toString();
+	}
+
+	public static String createInsertSqlForHelper(String table,
+			String idColumn, String objectId, String foreignIdColumn,
+			String subObjectId) {
+		StringBuilder sb = new StringBuilder(" insert into ");
+		sb.append(table).append(" (").append(idColumn).append(", ")
+				.append(foreignIdColumn).append(") ").append("(")
+				.append(objectId).append(", ").append(subObjectId).append(");");
+		return sb.toString()
+				;
 	}
 }

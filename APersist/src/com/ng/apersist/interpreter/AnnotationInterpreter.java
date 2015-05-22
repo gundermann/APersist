@@ -202,4 +202,12 @@ public class AnnotationInterpreter {
 		return columnFields;
 	}
 
+	public static String getHelperTable(Class<?> persistenceClass, Field field) throws NoPersistenceClassException {
+		return getTable(persistenceClass)+"2"+ getTable(field.getAnnotation(ToMany.class).target());
+	}
+
+	public static String getHelperIdColumn(Class<?> persistenceClass) throws NoPersistenceClassException {
+		return getTable(persistenceClass)+"_id";
+	}
+
 }

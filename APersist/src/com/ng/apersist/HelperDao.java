@@ -16,10 +16,12 @@ public class HelperDao<T> {
 	private Database db;
 	private String idColumn;
 	private DAO<T> foreignDao;
+	private String foreignIdColumn;
 
-	public HelperDao(String table, String idColumn, Database db, DAO<T> foreignDao) {
+	public HelperDao(String table, String idColumn, String foreignIdColumn, Database db, DAO<T> foreignDao) {
 		this.table = table;
 		this.idColumn = idColumn;
+		this.foreignIdColumn = foreignIdColumn;
 		this.db = db;
 		this.foreignDao = foreignDao;
 	}
@@ -54,6 +56,15 @@ public class HelperDao<T> {
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put(idColumn, id);
 		return map ;
+	}
+
+
+	public void insert(String objectId, String subObjectId) {
+		db.getWriteableDb().execSQL(SQLBuilder.createInsertSqlForHelper(table, idColumn, objectId, foreignIdColumn, subObjectId));
+	}
+
+	public DAO<T> getForeignDao() {
+		return foreignDao;
 	}
 
 }

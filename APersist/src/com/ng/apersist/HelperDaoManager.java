@@ -9,6 +9,7 @@ import java.util.Set;
 
 import android.util.Log;
 
+import com.ng.apersist.annotation.ToMany;
 import com.ng.apersist.dao.DAO;
 import com.ng.apersist.dao.DaoManager;
 import com.ng.apersist.interpreter.AnnotationInterpreter;
@@ -40,16 +41,17 @@ public class HelperDaoManager {
 			Database database, DbRegistry registry)
 			throws NoPersistenceClassException {
 		List<Field> allColumnFields = AnnotationInterpreter
-				.getAllColumnFields(persistenceClass);
+				.getToManyFields(persistenceClass);
 		for (Iterator<Field> iterator = allColumnFields.iterator(); iterator
 				.hasNext();) {
 			Field field = iterator.next();
 			if (AnnotationInterpreter.isToMany(field)) {
-				String table = AnnotationInterpreter.getTable(persistenceClass)
-						+ "2" + AnnotationInterpreter.getTable(field.getType());
-				String idColumn = AnnotationInterpreter.getIdColumn(persistenceClass);
+				ToMany annotation = AnnotationInterpreter.getToManyAnnotation(field);
+				String table = AnnotationInterpreter.getHelperTable(persistenceClass, field);
+				String idColumn = AnnotationInterpreter.getHelperIdColumn(persistenceClass);
+				String foreignIdColumn = AnnotationInterpreter.getHelperIdColumn(annotation.target());
 				DAO<?> foreignDao = DaoManager.getInstance().getDaoForType(field.getType());
-				helperDAOs.put(table, new HelperDao<>(table, idColumn, database, foreignDao));
+				helperDAOs.put(table, new HelperDao<>(table, idColumn, foreignIdColumn, database, foreignDao));
 				
 			}
 		}
