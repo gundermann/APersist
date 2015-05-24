@@ -56,14 +56,12 @@ public abstract class DAO<T> {
 	 */
 	public List<T> loadAll() {
 		List<T> all = new ArrayList<T>();
-		ObjectCreator<T> oc = new ObjectCreator<T>(getParameterType());
 		try {
 			Cursor c = database.getWriteableDb().rawQuery(
 					SQLBuilder.createSelectSql(null, getParameterType()), null);
 			if (c.moveToFirst()) {
 				do {
-					all.add(oc.createNewObject(ValueExtractor.extractToMap(c,
-							getParameterType())));
+					all.add(createObject(c));
 				} while (c.moveToNext());
 			}
 		} catch (NoPersistenceClassException e) {
@@ -145,7 +143,6 @@ public abstract class DAO<T> {
 		return null;
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private void insertOrUpdateChildren(T object) {
 		List<Field> complexFields = AnnotationInterpreter
 				.getComplexFields(getParameterType());
@@ -173,9 +170,7 @@ public abstract class DAO<T> {
 			IllegalArgumentException, InvocationTargetException,
 			NoIterableTypeAsToManyRelationException,
 			NoPersistenceClassException, PersistentObjectExpectedException {
-		Method getter = AnnotationInterpreter.getGetter(getParameterType()
-				.getMethods(), field);
-		Object subObject = getter.invoke(object);
+		Object subObject = ValueHandler.getValueOfField(object, field);
 		if (subObject == null) {
 
 		} else if (!(subObject instanceof Iterable)) {
@@ -216,12 +211,11 @@ public abstract class DAO<T> {
 	}
 
 	private Object getIdOfObject(Object object) {
-		DAO<?> daoForType = DaoManager.getInstance().getDaoForType(
-				object.getClass());
 		Field idField = AnnotationInterpreter.getIdField(object.getClass());
 		return ValueHandler.getValueOfField(object, idField);
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private void insertOrUpdateCompelxFieldWithToOneRealtion(T object,
 			Field field) throws MethodNotFound, IllegalAccessException,
 			IllegalArgumentException, InvocationTargetException {
@@ -285,13 +279,35 @@ public abstract class DAO<T> {
 					SQLBuilder.createSelectSql(columnToValueMap,
 							getParameterType()), null);
 			if (loaded.moveToFirst())
-				return new ObjectCreator<T>(getParameterType())
-						.createNewObject(ValueExtractor.extractToMap(loaded,
-								getParameterType()));
+				return createObject(loaded);
 		} catch (NoPersistenceClassException e) {
 			Log.e("Database", e.getMessage());
 		}
 		return null;
+	}
+
+	private T createObject(Cursor loaded) throws NoPersistenceClassException {
+		Map<String, String> extractedSimpleFields = ValueExtractor
+				.extractToMap(loaded, getParameterType());
+		String idValue = loaded.getString(loaded
+				.getColumnIndex(AnnotationInterpreter
+						.getIdColumn(getParameterType())));
+		if (AnnotationInterpreter.hasToManyFields(getParameterType()))
+			extractedSimpleFields.putAll(loadToManyRelations(idValue));
+		return new ObjectCreator<T>(getParameterType())
+				.createNewObject(extractedSimpleFields);
+	}
+
+	private Map<String, String> loadToManyRelations(String idFieldValue)
+			throws NoPersistenceClassException {
+		Map<String, String> toManyIds = new HashMap<String, String>();
+		List<Field> toManyFields = AnnotationInterpreter
+				.getToManyFields(getParameterType());
+		for (Field field : toManyFields) {
+			toManyIds.put(AnnotationInterpreter.getHelperTable(
+					getParameterType(), field), idFieldValue);
+		}
+		return toManyIds;
 	}
 
 	abstract protected Class<T> getParameterType();

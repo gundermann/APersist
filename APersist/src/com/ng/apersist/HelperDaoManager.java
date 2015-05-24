@@ -50,7 +50,7 @@ public class HelperDaoManager {
 				String table = AnnotationInterpreter.getHelperTable(persistenceClass, field);
 				String idColumn = AnnotationInterpreter.getHelperIdColumn(persistenceClass);
 				String foreignIdColumn = AnnotationInterpreter.getHelperIdColumn(annotation.target());
-				DAO<?> foreignDao = DaoManager.getInstance().getDaoForType(field.getType());
+				DAO<?> foreignDao = DaoManager.getInstance().getDaoForType(annotation.target());
 				helperDAOs.put(table, new HelperDao<>(table, idColumn, foreignIdColumn, database, foreignDao));
 				
 			}

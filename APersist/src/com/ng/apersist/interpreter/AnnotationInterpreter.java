@@ -25,6 +25,10 @@ import com.ng.apersist.util.NoPersistenceClassException;
 
 public class AnnotationInterpreter {
 
+	public static boolean hasToManyFields(Class<?> persistenceClass){
+		return !getToManyFields(persistenceClass).isEmpty();
+	}
+	
 	public static boolean isForeignKey(Field field) {
 		return (field.getAnnotation(ForeignKey.class) != null);
 	}
@@ -69,21 +73,16 @@ public class AnnotationInterpreter {
 
 	public static Map<Field, Method> getSetterWithField(Class<?> parameterType) {
 		Map<Field, Method> setterWithColumn = new HashMap<Field, Method>();
-		Field[] fields = parameterType.getDeclaredFields();
-		for (int i = 0; i < fields.length; i++) {
-			Column columnAnnotation = fields[i].getAnnotation(Column.class);
-			Id idAnnotation = fields[i].getAnnotation(Id.class);
-			if (columnAnnotation != null || idAnnotation != null) {
+		List<Field> allDatabaseFields = getAllDatabaseFields(parameterType);
+		for (Field field : allDatabaseFields) {
 				try {
 					Method getter = getSetter(
-							parameterType.getDeclaredMethods(), fields[i]);
-					setterWithColumn.put(fields[i], getter);
+							parameterType.getDeclaredMethods(), field);
+					setterWithColumn.put(field, getter);
 				} catch (MethodNotFound e) {
 					Log.e(AnnotationInterpreter.class.getName(), e.getMessage());
 				}
 			}
-		}
-
 		return setterWithColumn;
 	}
 
@@ -208,6 +207,13 @@ public class AnnotationInterpreter {
 
 	public static String getHelperIdColumn(Class<?> persistenceClass) throws NoPersistenceClassException {
 		return getTable(persistenceClass)+"_id";
+	}
+
+	public static List<Field> getAllDatabaseFields(Class<? extends Object> clazz) {
+		List<Field> fields = new ArrayList<Field>();
+		fields.addAll(getAllColumnFields(clazz));
+		fields.addAll(getToManyFields(clazz));
+		return fields;
 	}
 
 }

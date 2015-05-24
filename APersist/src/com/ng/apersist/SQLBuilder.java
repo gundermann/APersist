@@ -325,7 +325,7 @@ public class SQLBuilder {
 			String subObjectId) {
 		StringBuilder sb = new StringBuilder(" insert into ");
 		sb.append(table).append(" (").append(idColumn).append(", ")
-				.append(foreignIdColumn).append(") ").append("(")
+				.append(foreignIdColumn).append(") ").append("values (")
 				.append(objectId).append(", ").append(subObjectId).append(");");
 		return sb.toString()
 				;
