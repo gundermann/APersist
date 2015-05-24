@@ -7,13 +7,14 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-public class DatabaseImpl implements Database {
+class DatabaseImpl implements Database {
 
 	SQLiteOpenHelper helper;
 	
 	public DatabaseImpl(Context context, String name, DbRegistry registry, int version) {
 		helper = new SQLiteOpenDbHelper(context, name, registry, version );
 		DaoManager.init(this, registry);
+		HelperDaoManager.init(this, registry);
 	}
 
 

@@ -3,6 +3,7 @@ package com.ng.apersist;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Collection;
 import java.util.Map;
 
 import android.util.Log;
@@ -10,6 +11,7 @@ import android.util.Log;
 import com.ng.apersist.dao.DAO;
 import com.ng.apersist.dao.DaoManager;
 import com.ng.apersist.interpreter.AnnotationInterpreter;
+import com.ng.apersist.util.NoPersistenceClassException;
 import com.ng.apersist.util.ValueHandler;
 
 public class ObjectCreator<T> {
@@ -38,20 +40,36 @@ public class ObjectCreator<T> {
 			Method setter = setters.get(field);
 			try {
 				Object value;
-				if (AnnotationInterpreter.isForeignKey(field)) {
+				if (AnnotationInterpreter.isToOne(field)) {
 					DAO<?> daoForSubtype = DaoManager.getInstance()
 							.getDaoForType(field.getType());
 					value = daoForSubtype.load(getValueFromMap(
 							columnToValueMap, field));
-				} else {
+				} else if(AnnotationInterpreter.isToMany(field)){
+					value = getCollectionOfToManyTarget(columnToValueMap, field);
+				}
+				else {
 					value = getValueFromMap(columnToValueMap, field);
 				}
 				setter.invoke(newInstance, value);
 			} catch (IllegalAccessException | IllegalArgumentException
-					| InvocationTargetException e) {
-				e.printStackTrace();
+					| InvocationTargetException | NoPersistenceClassException e) {
+				Log.e("DAO", "Cannot set values");
 			}
 		}
+	}
+
+	private Collection<?> getCollectionOfToManyTarget(
+			Map<String, String> columnToValueMap, Field field) throws NoPersistenceClassException {
+		String table = "";
+		for (String tablename : columnToValueMap.keySet()) {
+			if(tablename.equals(AnnotationInterpreter.getHelperTable(parameterType, field))){
+				table = tablename;
+				break;
+			}
+		}
+		String id = columnToValueMap.get(table);
+		return HelperDaoManager.getDAOForTable(table).loadAll(id);
 	}
 
 	private Object getValueFromMap(Map<String, String> columnToValueMap,

@@ -12,19 +12,22 @@ import android.annotation.SuppressLint;
 import android.util.Log;
 
 import com.ng.apersist.annotation.Column;
-import com.ng.apersist.annotation.ForeignKey;
 import com.ng.apersist.annotation.Id;
 import com.ng.apersist.annotation.PersistenceClass;
 import com.ng.apersist.annotation.Table;
+import com.ng.apersist.annotation.ToMany;
+import com.ng.apersist.annotation.ToManyMinOne;
+import com.ng.apersist.annotation.ToOne;
+import com.ng.apersist.annotation.ToOneOrNone;
 import com.ng.apersist.util.MethodNotFound;
 import com.ng.apersist.util.NoPersistenceClassException;
 
 public class AnnotationInterpreter {
 
-	public static boolean isForeignKey(Field field) {
-		return (field.getAnnotation(ForeignKey.class) != null);
+	public static boolean hasToManyFields(Class<?> persistenceClass){
+		return !getToManyFields(persistenceClass).isEmpty();
 	}
-
+	
 	public static String getColumnToField(Field field) {
 		return field.getName();
 	}
@@ -65,21 +68,16 @@ public class AnnotationInterpreter {
 
 	public static Map<Field, Method> getSetterWithField(Class<?> parameterType) {
 		Map<Field, Method> setterWithColumn = new HashMap<Field, Method>();
-		Field[] fields = parameterType.getDeclaredFields();
-		for (int i = 0; i < fields.length; i++) {
-			Column columnAnnotation = fields[i].getAnnotation(Column.class);
-			Id idAnnotation = fields[i].getAnnotation(Id.class);
-			if (columnAnnotation != null || idAnnotation != null) {
+		List<Field> allDatabaseFields = getAllDatabaseFields(parameterType);
+		for (Field field : allDatabaseFields) {
 				try {
 					Method getter = getSetter(
-							parameterType.getDeclaredMethods(), fields[i]);
-					setterWithColumn.put(fields[i], getter);
+							parameterType.getDeclaredMethods(), field);
+					setterWithColumn.put(field, getter);
 				} catch (MethodNotFound e) {
 					Log.e(AnnotationInterpreter.class.getName(), e.getMessage());
 				}
 			}
-		}
-
 		return setterWithColumn;
 	}
 
@@ -154,10 +152,60 @@ public class AnnotationInterpreter {
 		return annotation.autoincrement();
 	}
 
-	public static String getTargetField(Field field) {
-		ForeignKey annotation = field.getAnnotation(ForeignKey.class);
-		// return annotation.targetField();
-		// TODO get idField
+	public static boolean isToOne(Field field) {
+		return (field.getAnnotation(ToOne.class) != null || field
+				.getAnnotation(ToOneOrNone.class) != null);
+	}
+
+	public static boolean isMinOne(Field field) {
+		return (field.getAnnotation(ToManyMinOne.class) != null || field
+				.getAnnotation(ToOne.class) != null);
+	}
+
+	public static boolean isToMany(Field field) {
+		return (field.getAnnotation(ToManyMinOne.class) != null || field
+				.getAnnotation(ToMany.class) != null);
+	}
+
+	public static String getIdColumn(Class<?> persistenceClass) {
+		return getColumnToField(getIdField(persistenceClass));
+	}
+
+	public static ToMany getToManyAnnotation(Field field) {
+		return field.getAnnotation(ToMany.class);
+	}
+
+	public static List<Field> getToManyFields(Class<?> persistenceClass) {
+		List<Field> columnFields = new ArrayList<Field>();
+		Field[] declaredFields = persistenceClass.getDeclaredFields();
+		for (int i = 0; i < declaredFields.length; i++) {
+				ToMany toManyAnnotation = declaredFields[i]
+						.getAnnotation(ToMany.class);
+				ToManyMinOne toManyMinOneAnnotation = declaredFields[i]
+						.getAnnotation(ToManyMinOne.class);
+				if (toManyAnnotation != null || toManyMinOneAnnotation != null)
+					columnFields.add(declaredFields[i]);
+		}
+		return columnFields;
+	}
+
+	public static String getHelperTable(Class<?> persistenceClass, Field field) throws NoPersistenceClassException {
+		return getTable(persistenceClass)+"2"+ getTable(field.getAnnotation(ToMany.class).target());
+	}
+
+	public static String getHelperIdColumn(Class<?> persistenceClass) throws NoPersistenceClassException {
+		return getTable(persistenceClass)+"_id";
+	}
+
+	public static List<Field> getAllDatabaseFields(Class<? extends Object> clazz) {
+		List<Field> fields = new ArrayList<Field>();
+		fields.addAll(getAllColumnFields(clazz));
+		fields.addAll(getToManyFields(clazz));
+		return fields;
+	}
+
+	public static Object getTargetField(Field field) {
+		
 		return null;
 	}
 

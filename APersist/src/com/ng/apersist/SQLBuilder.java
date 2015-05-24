@@ -1,11 +1,14 @@
 package com.ng.apersist;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import com.ng.apersist.annotation.ToMany;
 import com.ng.apersist.interpreter.AnnotationInterpreter;
 import com.ng.apersist.util.NoPersistenceClassException;
 import com.ng.apersist.util.ValueHandler;
@@ -164,11 +167,13 @@ public class SQLBuilder {
 		for (Iterator<Field> iterator = allColumnFields.iterator(); iterator
 				.hasNext();) {
 			Field field = iterator.next();
-			Class<?> databaseType = ValueHandler.getDatabaseTypeFor(field
-					.getType());
-			sb.append(field.getName()).append(" ")
-					.append(databaseType.getSimpleName());
-			sb.append(specificFieldDescription(field));
+			if (!AnnotationInterpreter.isToMany(field)) {
+				Class<?> databaseType = ValueHandler.getDatabaseTypeFor(field
+						.getType());
+				sb.append(field.getName()).append(" ")
+						.append(databaseType.getSimpleName());
+				sb.append(specificFieldDescription(field));
+			}
 			if (iterator.hasNext())
 				sb.append(",");
 		}
@@ -184,13 +189,16 @@ public class SQLBuilder {
 			if (AnnotationInterpreter.isAutoincrement(field)) {
 				sb.append(" autoincrement");
 			}
-		} else if (AnnotationInterpreter.isForeignKey(field)) {
+		} else if (AnnotationInterpreter.isToOne(field)) {
 			try {
 				sb.append(" references ")
 						.append(AnnotationInterpreter.getTable(field.getType()))
 						.append(" (")
 						.append(AnnotationInterpreter.getTargetField(field))
 						.append(")");
+				if (AnnotationInterpreter.isMinOne(field)) {
+					sb.append(" not null");
+				}
 			} catch (NoPersistenceClassException e) {
 				e.printStackTrace();
 			}
@@ -198,14 +206,128 @@ public class SQLBuilder {
 		return sb.toString();
 	}
 
-	public static String createDropSql(Class<?> persistenceClass) {
+	public static String createDropSql(Class<?> persistenceClass)
+			throws NoPersistenceClassException {
 		StringBuilder sb = new StringBuilder("drop table if exists ");
-		try {
-			sb.append(AnnotationInterpreter.getTable(persistenceClass)).append(
-					";");
-		} catch (NoPersistenceClassException e) {
-			e.printStackTrace();
-		}
+		sb.append(AnnotationInterpreter.getTable(persistenceClass)).append(";");
 		return sb.toString();
+	}
+
+	public static List<String> createMainTablesCreationSqls(
+			Set<Class<?>> classes) throws NoPersistenceClassException {
+		List<String> sqls = new ArrayList<String>();
+		for (Class<?> persistenceClass : classes) {
+			sqls.add(createCreateSql(persistenceClass));
+		}
+		return sqls;
+	}
+
+	public static List<String> createHelperTablesCreationSqls(
+			Set<Class<?>> classes) throws NoPersistenceClassException {
+		List<String> sqls = new ArrayList<String>();
+		for (Class<?> persistenceClass : classes) {
+			sqls.addAll(createHelperCreateSql(persistenceClass));
+		}
+		return sqls;
+	}
+
+	private static List<String> createHelperCreateSql(Class<?> persistenceClass)
+			throws NoPersistenceClassException {
+		List<String> sqls = new ArrayList<String>();
+		List<Field> allToManyFields = AnnotationInterpreter
+				.getToManyFields(persistenceClass);
+		for (Iterator<Field> iterator = allToManyFields.iterator(); iterator
+				.hasNext();) {
+			Field field = iterator.next();
+			StringBuilder sb = new StringBuilder("create table ");
+			ToMany annotation = AnnotationInterpreter
+					.getToManyAnnotation(field);
+			sb.append(
+					AnnotationInterpreter.getHelperTable(persistenceClass,
+							field)).append("( ");
+			sb.append("id integer primary key, ")
+					.append(AnnotationInterpreter.getTable(persistenceClass))
+					.append("_id")
+					.append(" integer ")
+					.append("references ")
+					.append(AnnotationInterpreter.getTable(persistenceClass))
+					.append(" (")
+					.append(AnnotationInterpreter.getIdColumn(persistenceClass))
+					.append(")")
+					.append(", ")
+					.append(AnnotationInterpreter.getTable(annotation.target()))
+					.append("_id")
+					.append(" integer ")
+					.append("references ")
+					.append(AnnotationInterpreter.getTable(annotation.target()))
+					.append(" (")
+					.append(AnnotationInterpreter.getIdColumn(annotation
+							.target())).append(")");
+
+			sb.append(");");
+			sqls.add(sb.toString());
+		}
+
+		return sqls;
+	}
+
+	public static List<String> createHelperTablesDropSqls(Set<Class<?>> classes)
+			throws NoPersistenceClassException {
+		List<String> sqls = new ArrayList<String>();
+		for (Class<?> persistenceClass : classes) {
+			sqls.addAll(createHelperDropSql(persistenceClass));
+		}
+		return sqls;
+	}
+
+	public static List<String> createMainTablesDropSqls(Set<Class<?>> classes)
+			throws NoPersistenceClassException {
+		List<String> sqls = new ArrayList<String>();
+		for (Class<?> persistenceClass : classes) {
+			sqls.add(createDropSql(persistenceClass));
+		}
+		return sqls;
+	}
+
+	private static List<String> createHelperDropSql(Class<?> persistenceClass)
+			throws NoPersistenceClassException {
+		List<String> helperDropSqls = new ArrayList<String>();
+		List<Field> allColumnFields = AnnotationInterpreter
+				.getAllColumnFields(persistenceClass);
+		for (Iterator<Field> iterator = allColumnFields.iterator(); iterator
+				.hasNext();) {
+			Field field = iterator.next();
+			if (AnnotationInterpreter.isToMany(field)) {
+				StringBuilder sb = new StringBuilder("drop table if exists ");
+				sb.append(
+						AnnotationInterpreter.getHelperTable(persistenceClass,
+								field)).append(";");
+				helperDropSqls.add(sb.toString());
+			}
+		}
+		return helperDropSqls;
+	}
+
+	public static String createSelectSql(Map<String, Object> columnToValueMap,
+			String table) {
+		StringBuilder builder = new StringBuilder("select * from ");
+		builder.append(table);
+		if (columnToValueMap != null && !columnToValueMap.keySet().isEmpty()) {
+			builder.append(" where ");
+			builder.append(createWhereCondition(columnToValueMap));
+		}
+		builder.append(";");
+		return builder.toString();
+	}
+
+	public static String createInsertSqlForHelper(String table,
+			String idColumn, String objectId, String foreignIdColumn,
+			String subObjectId) {
+		StringBuilder sb = new StringBuilder(" insert into ");
+		sb.append(table).append(" (").append(idColumn).append(", ")
+				.append(foreignIdColumn).append(") ").append("values (")
+				.append(objectId).append(", ").append(subObjectId).append(");");
+		return sb.toString()
+				;
 	}
 }
