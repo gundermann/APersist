@@ -12,7 +12,6 @@ import android.annotation.SuppressLint;
 import android.util.Log;
 
 import com.ng.apersist.annotation.Column;
-import com.ng.apersist.annotation.ForeignKey;
 import com.ng.apersist.annotation.Id;
 import com.ng.apersist.annotation.PersistenceClass;
 import com.ng.apersist.annotation.Table;
@@ -29,10 +28,6 @@ public class AnnotationInterpreter {
 		return !getToManyFields(persistenceClass).isEmpty();
 	}
 	
-	public static boolean isForeignKey(Field field) {
-		return (field.getAnnotation(ForeignKey.class) != null);
-	}
-
 	public static String getColumnToField(Field field) {
 		return field.getName();
 	}
@@ -157,13 +152,6 @@ public class AnnotationInterpreter {
 		return annotation.autoincrement();
 	}
 
-	public static String getTargetField(Field field) {
-		ForeignKey annotation = field.getAnnotation(ForeignKey.class);
-		// return annotation.targetField();
-		// TODO get idField
-		return null;
-	}
-
 	public static boolean isToOne(Field field) {
 		return (field.getAnnotation(ToOne.class) != null || field
 				.getAnnotation(ToOneOrNone.class) != null);
@@ -214,6 +202,11 @@ public class AnnotationInterpreter {
 		fields.addAll(getAllColumnFields(clazz));
 		fields.addAll(getToManyFields(clazz));
 		return fields;
+	}
+
+	public static Object getTargetField(Field field) {
+		
+		return null;
 	}
 
 }
