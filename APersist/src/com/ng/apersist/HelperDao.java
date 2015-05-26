@@ -45,7 +45,7 @@ public class HelperDao<T> {
 		List<Long> ids = new ArrayList<Long>();
 		if(cursor.moveToFirst()){
 			while(!cursor.isAfterLast()){
-				ids.add(cursor.getLong(2));
+				ids.add(cursor.getLong(1));
 				cursor.moveToNext();
 			}
 		}

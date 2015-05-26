@@ -130,7 +130,7 @@ public class AnnotationInterpreter {
 		List<Field> columnFields = new ArrayList<Field>();
 		Field[] declaredFields = persistenceClass.getDeclaredFields();
 		for (int i = 0; i < declaredFields.length; i++) {
-			if (isIdField(declaredFields[i]))
+			if (isIdField(declaredFields[i]) || isToOne(declaredFields[i]))
 				columnFields.add(declaredFields[i]);
 			else {
 				Column annotation = declaredFields[i]
@@ -204,9 +204,12 @@ public class AnnotationInterpreter {
 		return fields;
 	}
 
-	public static Object getTargetField(Field field) {
-		
-		return null;
+	public static Field getTargetField(Field field) {
+		return getIdField(field.getType());
+	}
+
+	public static String getTargetFieldColumn(Field field) {
+		return getColumnToField(getTargetField(field));
 	}
 
 }

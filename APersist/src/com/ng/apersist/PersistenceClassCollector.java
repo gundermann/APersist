@@ -32,5 +32,22 @@ public class PersistenceClassCollector {
 		}
 		return classes;
 	}
+//	
+//	Map<Integer, List<Class<?>>> map = new HashMap<Integer, List<Class<?>>>();
+//	for (Class<? extends DAO<?>> daoclass : registry.getRegistred()
+//			.keySet()) {
+//		Class<?> persistenceClass = registry.getRegistred().get(daoclass);
+//		Integer priority = getPriorityOfPersistenceClass(persistenceClass, map);
+//		List<Class<?>> classes;
+//		if (map.get(priority) == null) {
+//			classes = new ArrayList<Class<?>>();
+//		}
+//		else{
+//			classes = map.get(priority);
+//		}
+//		classes.add(persistenceClass);
+//		map.put(priority, classes);
+//	}
+//	return map;
 
 }

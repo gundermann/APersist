@@ -194,7 +194,7 @@ public class SQLBuilder {
 				sb.append(" references ")
 						.append(AnnotationInterpreter.getTable(field.getType()))
 						.append(" (")
-						.append(AnnotationInterpreter.getTargetField(field))
+						.append(AnnotationInterpreter.getTargetFieldColumn(field))
 						.append(")");
 				if (AnnotationInterpreter.isMinOne(field)) {
 					sb.append(" not null");
@@ -245,8 +245,8 @@ public class SQLBuilder {
 			sb.append(
 					AnnotationInterpreter.getHelperTable(persistenceClass,
 							field)).append("( ");
-			sb.append("id integer primary key, ")
-					.append(AnnotationInterpreter.getTable(persistenceClass))
+//			sb.append("id integer primary key, ")
+					sb.append(AnnotationInterpreter.getTable(persistenceClass))
 					.append("_id")
 					.append(" integer ")
 					.append("references ")
@@ -264,7 +264,9 @@ public class SQLBuilder {
 					.append(AnnotationInterpreter.getIdColumn(annotation
 							.target())).append(")");
 
-			sb.append(");");
+					sb.append(", PRIMARY KEY (").append(AnnotationInterpreter.getTable(persistenceClass))
+					.append("_id").append(", ").append(AnnotationInterpreter.getTable(annotation.target()))
+					.append("_id").append(")").append(");");
 			sqls.add(sb.toString());
 		}
 
@@ -293,7 +295,7 @@ public class SQLBuilder {
 			throws NoPersistenceClassException {
 		List<String> helperDropSqls = new ArrayList<String>();
 		List<Field> allColumnFields = AnnotationInterpreter
-				.getAllColumnFields(persistenceClass);
+				.getAllDatabaseFields(persistenceClass);
 		for (Iterator<Field> iterator = allColumnFields.iterator(); iterator
 				.hasNext();) {
 			Field field = iterator.next();
