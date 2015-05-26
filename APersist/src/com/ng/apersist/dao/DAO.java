@@ -189,8 +189,7 @@ public abstract class DAO<T> {
 				Object nestedObject = subObjectIterator.next();
 				checkIfPersistent(nestedObject);
 				Object subObjectId = getIdOfObject(nestedObject);
-				//TODO contains doesnt work
-				if (!allToManyObjects.contains(nestedObject)) {
+				if (!ObjectComparator.containsById(allToManyObjects, nestedObject)) {
 					helperDao.insert(String.valueOf(objectId),
 							String.valueOf(subObjectId));
 				}

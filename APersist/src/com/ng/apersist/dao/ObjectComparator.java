@@ -1,6 +1,7 @@
 package com.ng.apersist.dao;
 
 import java.lang.reflect.Field;
+import java.util.Collection;
 import java.util.List;
 
 import com.ng.apersist.interpreter.AnnotationInterpreter;
@@ -23,6 +24,17 @@ public class ObjectComparator {
 
 	private static boolean objectsHaveSameClass(Object o1, Object o2) {
 		return o1.getClass().equals(o2.getClass());
+	}
+
+	public static boolean containsById(Collection<?> allObjects,
+			Object o2) {
+		for (Object o1 : allObjects) {
+			Object id1 = ValueHandler.getValueOfField(o1, AnnotationInterpreter.getIdField(o1.getClass()));
+			Object id2 = ValueHandler.getValueOfField(o2, AnnotationInterpreter.getIdField(o2.getClass()));
+			if(id1.equals(id2))
+				return true;
+		}
+		return false;
 	}
 
 
