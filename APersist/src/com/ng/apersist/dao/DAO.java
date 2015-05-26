@@ -149,9 +149,9 @@ public abstract class DAO<T> {
 		for (Field field : complexFields) {
 			try {
 
-				if (!AnnotationInterpreter.isToMany(field))
-					insertOrUpdateCompelxFieldWithToOneRealtion(object, field);
-				else
+				if (AnnotationInterpreter.isToMany(field))
+//					insertOrUpdateCompelxFieldWithToOneRealtion(object, field);
+//				else
 					insertOrUpdateComplexFieldWithToManyRealation(object, field);
 
 			} catch (IllegalAccessException | IllegalArgumentException
