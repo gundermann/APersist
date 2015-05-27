@@ -28,7 +28,7 @@ public class ObjectCreator<T> {
 			newInstance = parameterType.newInstance();
 			fillObject(newInstance, columnToValueMap);
 		} catch (InstantiationException | IllegalAccessException e) {
-			Log.e("DAO", "Cannot instantiate");
+			Log.e("Creator", "Cannot instantiate");
 		}
 		return newInstance;
 	}
@@ -43,27 +43,30 @@ public class ObjectCreator<T> {
 				if (AnnotationInterpreter.isToOne(field)) {
 					DAO<?> daoForSubtype = DaoManager.getInstance()
 							.getDaoForType(field.getType());
+					Field idField = AnnotationInterpreter.getIdField(field
+							.getType());
 					value = daoForSubtype.load(getValueFromMap(
-							columnToValueMap, field));
-				} else if(AnnotationInterpreter.isToMany(field)){
+							columnToValueMap, field, idField.getType()));
+				} else if (AnnotationInterpreter.isToMany(field)) {
 					value = getCollectionOfToManyTarget(columnToValueMap, field);
-				}
-				else {
-					value = getValueFromMap(columnToValueMap, field);
+				} else {
+					value = getValueFromMap(columnToValueMap, field, field.getType());
 				}
 				setter.invoke(newInstance, value);
 			} catch (IllegalAccessException | IllegalArgumentException
 					| InvocationTargetException | NoPersistenceClassException e) {
-				Log.e("DAO", "Cannot set values");
+				Log.e("Creator", "Cannot set values");
 			}
 		}
 	}
 
 	private Collection<?> getCollectionOfToManyTarget(
-			Map<String, String> columnToValueMap, Field field) throws NoPersistenceClassException {
+			Map<String, String> columnToValueMap, Field field)
+			throws NoPersistenceClassException {
 		String table = "";
 		for (String tablename : columnToValueMap.keySet()) {
-			if(tablename.equals(AnnotationInterpreter.getHelperTable(parameterType, field))){
+			if (tablename.equals(AnnotationInterpreter.getHelperTable(
+					parameterType, field))) {
 				table = tablename;
 				break;
 			}
@@ -73,10 +76,9 @@ public class ObjectCreator<T> {
 	}
 
 	private Object getValueFromMap(Map<String, String> columnToValueMap,
-			Field field) {
+			Field field, Class<?> type) {
 		String column = AnnotationInterpreter.getColumnToField(field);
 		String value = columnToValueMap.get(column);
-		Class<?> type = field.getType();
 		return ValueHandler.convertTypeFromString(type, value);
 	}
 

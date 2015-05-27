@@ -56,6 +56,7 @@ public abstract class DAO<T> {
 	 */
 	public List<T> loadAll() {
 		List<T> all = new ArrayList<T>();
+		Log.i("DAO", "Try to load all of " + getParameterType().getSimpleName());
 		try {
 			Cursor c = database.getWriteableDb().rawQuery(
 					SQLBuilder.createSelectSql(null, getParameterType()), null);
@@ -71,6 +72,8 @@ public abstract class DAO<T> {
 	}
 
 	public boolean delete(T object) {
+		Log.i("DAO", "Try to delete " + object.toString() + " from class "
+				+ object.getClass().getSimpleName());
 		try {
 			database.getWriteableDb().execSQL(
 					SQLBuilder.createDeleteSql(object));
@@ -82,6 +85,8 @@ public abstract class DAO<T> {
 	}
 
 	private T insert(T object) {
+		Log.i("DAO", "Try to insert " + object.toString() + " from class "
+				+ object.getClass().getSimpleName());
 		insertOrUpdateChildren(object);
 		try {
 			if (isIdNotSet(object))
@@ -115,6 +120,8 @@ public abstract class DAO<T> {
 
 	private void setIdToObject(T object) throws IllegalAccessException,
 			IllegalArgumentException, InvocationTargetException {
+		Log.i("DAO", "Set id to object " + object.toString() + " from class "
+				+ object.getClass().getSimpleName());
 		Field idField = AnnotationInterpreter.getIdField(getParameterType());
 		Method setter;
 		try {
@@ -132,6 +139,7 @@ public abstract class DAO<T> {
 	}
 
 	public Long getMaxId() {
+		Log.i("DAO", "Try to get max id from "+ getParameterType().getSimpleName());
 		try {
 			Cursor maxIdCursor = database.execQuery(SQLBuilder
 					.createMaxIdSelectionSql(getParameterType()));
@@ -148,12 +156,8 @@ public abstract class DAO<T> {
 				.getComplexFields(getParameterType());
 		for (Field field : complexFields) {
 			try {
-
 				if (AnnotationInterpreter.isToMany(field))
-//					insertOrUpdateCompelxFieldWithToOneRealtion(object, field);
-//				else
 					insertOrUpdateComplexFieldWithToManyRealation(object, field);
-
 			} catch (IllegalAccessException | IllegalArgumentException
 					| InvocationTargetException | MethodNotFound
 					| NoIterableTypeAsToManyRelationException
@@ -183,13 +187,16 @@ public abstract class DAO<T> {
 					.getDAOForTable(AnnotationInterpreter.getHelperTable(
 							getParameterType(), field));
 			Object objectId = getIdOfObject(object);
+			if (objectId == null)
+				objectId = generateNextId();
 			Collection<?> allToManyObjects = helperDao.loadAll(String
 					.valueOf(objectId));
 			while (subObjectIterator.hasNext()) {
 				Object nestedObject = subObjectIterator.next();
 				checkIfPersistent(nestedObject);
 				Object subObjectId = getIdOfObject(nestedObject);
-				if (!ObjectComparator.containsById(allToManyObjects, nestedObject)) {
+				if (!ObjectComparator.containsById(allToManyObjects,
+						nestedObject)) {
 					helperDao.insert(String.valueOf(objectId),
 							String.valueOf(subObjectId));
 				}
@@ -213,18 +220,6 @@ public abstract class DAO<T> {
 	private Object getIdOfObject(Object object) {
 		Field idField = AnnotationInterpreter.getIdField(object.getClass());
 		return ValueHandler.getValueOfField(object, idField);
-	}
-
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private void insertOrUpdateCompelxFieldWithToOneRealtion(T object,
-			Field field) throws MethodNotFound, IllegalAccessException,
-			IllegalArgumentException, InvocationTargetException {
-		Method getter = AnnotationInterpreter.getGetter(getParameterType()
-				.getMethods(), field);
-		Object subObject = getter.invoke(object);
-		DAO daoForSubType = DaoManager.getInstance().getDaoForType(
-				getter.invoke(object).getClass());
-		daoForSubType.insertOrUpdate(subObject);
 	}
 
 	/**
@@ -270,6 +265,8 @@ public abstract class DAO<T> {
 	 * @return T object with id
 	 */
 	public T load(Object idFieldValue) {
+		if (idFieldValue == null)
+			return null;
 		Field idField = AnnotationInterpreter.getIdField(getParameterType());
 		String idColumn = AnnotationInterpreter.getColumnToField(idField);
 		Map<String, Object> columnToValueMap = new HashMap<String, Object>();

@@ -35,7 +35,7 @@ public class AnnotationInterpreter {
 	public static boolean isSimpleField(Field field) {
 		Class<?> type = field.getType();
 		return type == String.class || type == Long.class || type == Date.class
-				|| type == Double.class || type == boolean.class
+				|| type == Double.class || type == boolean.class || type == Integer.class
 				|| type.isEnum();
 	}
 

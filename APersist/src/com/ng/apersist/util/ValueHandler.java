@@ -22,6 +22,8 @@ public class ValueHandler {
 
 	public static String getDatabaseTypeAsSQLValueFromField(Object object,
 			Field field) {
+		Log.i("VALUES", "try to invoke " + field.getName() + " from "
+				+ object.getClass().getSimpleName() );
 		try {
 			Method getter = AnnotationInterpreter.getGetter(object.getClass()
 					.getDeclaredMethods(), field);
@@ -101,12 +103,12 @@ public class ValueHandler {
 	private static Object convertToEnum(Class<?> enumType,
 			String stringToConvert) {
 		Object[] enumConstants = enumType.getEnumConstants();
-		for(int i = 0; i<enumConstants.length;i++){
-			if(enumConstants[i].toString().equals(stringToConvert))
+		for (int i = 0; i < enumConstants.length; i++) {
+			if (enumConstants[i].toString().equals(stringToConvert))
 				return enumConstants[i];
 		}
-		
-		//TODO exception
+
+		// TODO exception
 		return null;
 	}
 
@@ -134,7 +136,7 @@ public class ValueHandler {
 		StringBuilder sb = new StringBuilder();
 		Iterator<?> i = iterable.iterator();
 		sb.append(i.next().toString());
-		while(i.hasNext()){
+		while (i.hasNext()) {
 			sb.append(";");
 			Object next = i.next();
 			sb.append(next.toString());
