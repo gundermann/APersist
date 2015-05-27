@@ -44,8 +44,18 @@ public class SQLBuilder {
 		StringBuilder builder = new StringBuilder("update ");
 		builder.append(AnnotationInterpreter.getTable(object.getClass()));
 		builder.append(createSqlValuesUpdatePart(object));
+		builder.append(" where ");
+		builder.append(createWhereCondition(createIdMap(object)));
 		builder.append(";");
 		return builder.toString();
+	}
+
+	private static Map<String, Object> createIdMap(Object object) {
+		Map<String, Object> map = new HashMap<String, Object>();
+		String idColumn = AnnotationInterpreter.getIdColumn(object.getClass());
+		Object value = ValueHandler.getValueOfField(object, AnnotationInterpreter.getIdField(object.getClass()));
+		map.put(idColumn, value);
+		return map ;
 	}
 
 	private static String createSqlValuesUpdatePart(Object object) {
@@ -57,25 +67,28 @@ public class SQLBuilder {
 			Field field = iterator.next();
 			String column = AnnotationInterpreter.getColumnToField(field);
 			String value;
-			if (AnnotationInterpreter.isSimpleField(field)) {
-				value = ValueHandler.getDatabaseTypeAsSQLValueFromField(object,
-						field);
-			} else {
-				Object nestedObject = ValueHandler.getValueOfField(object,
-						field);
-				if (nestedObject != null) {
-					Field idField = AnnotationInterpreter
-							.getIdField(nestedObject.getClass());
+			if (!AnnotationInterpreter.isIdField(field)) {
+				if (AnnotationInterpreter.isSimpleField(field)) {
 					value = ValueHandler.getDatabaseTypeAsSQLValueFromField(
-							nestedObject, idField);
+							object, field);
 				} else {
-					value = null;
+					Object nestedObject = ValueHandler.getValueOfField(object,
+							field);
+					if (nestedObject != null) {
+						Field idField = AnnotationInterpreter
+								.getIdField(nestedObject.getClass());
+						value = ValueHandler
+								.getDatabaseTypeAsSQLValueFromField(
+										nestedObject, idField);
+					} else {
+						value = null;
+					}
 				}
-			}
 
-			sb.append(column).append(" = ").append(value);
-			if (iterator.hasNext()) {
-				sb.append(", ");
+				sb.append(column).append(" = ").append(value);
+				if (iterator.hasNext()) {
+					sb.append(", ");
+				}
 			}
 		}
 		return sb.toString();
@@ -194,8 +207,8 @@ public class SQLBuilder {
 				sb.append(" references ")
 						.append(AnnotationInterpreter.getTable(field.getType()))
 						.append(" (")
-						.append(AnnotationInterpreter.getTargetFieldColumn(field))
-						.append(")");
+						.append(AnnotationInterpreter
+								.getTargetFieldColumn(field)).append(")");
 				if (AnnotationInterpreter.isMinOne(field)) {
 					sb.append(" not null");
 				}
@@ -245,8 +258,8 @@ public class SQLBuilder {
 			sb.append(
 					AnnotationInterpreter.getHelperTable(persistenceClass,
 							field)).append("( ");
-//			sb.append("id integer primary key, ")
-					sb.append(AnnotationInterpreter.getTable(persistenceClass))
+			// sb.append("id integer primary key, ")
+			sb.append(AnnotationInterpreter.getTable(persistenceClass))
 					.append("_id")
 					.append(" integer ")
 					.append("references ")
@@ -264,8 +277,11 @@ public class SQLBuilder {
 					.append(AnnotationInterpreter.getIdColumn(annotation
 							.target())).append(")");
 
-					sb.append(", PRIMARY KEY (").append(AnnotationInterpreter.getTable(persistenceClass))
-					.append("_id").append(", ").append(AnnotationInterpreter.getTable(annotation.target()))
+			sb.append(", PRIMARY KEY (")
+					.append(AnnotationInterpreter.getTable(persistenceClass))
+					.append("_id")
+					.append(", ")
+					.append(AnnotationInterpreter.getTable(annotation.target()))
 					.append("_id").append(")").append(");");
 			sqls.add(sb.toString());
 		}
@@ -329,7 +345,6 @@ public class SQLBuilder {
 		sb.append(table).append(" (").append(idColumn).append(", ")
 				.append(foreignIdColumn).append(") ").append("values (")
 				.append(objectId).append(", ").append(subObjectId).append(");");
-		return sb.toString()
-				;
+		return sb.toString();
 	}
 }
