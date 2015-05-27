@@ -16,6 +16,7 @@ import android.util.Log;
 import com.ng.apersist.Database;
 import com.ng.apersist.HelperDao;
 import com.ng.apersist.HelperDaoManager;
+import com.ng.apersist.ObjectComparator;
 import com.ng.apersist.ObjectCreator;
 import com.ng.apersist.SQLBuilder;
 import com.ng.apersist.interpreter.AnnotationInterpreter;
