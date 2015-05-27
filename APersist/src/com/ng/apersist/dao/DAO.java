@@ -4,7 +4,9 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -12,12 +14,15 @@ import android.database.Cursor;
 import android.util.Log;
 
 import com.ng.apersist.Database;
+import com.ng.apersist.HelperDao;
+import com.ng.apersist.HelperDaoManager;
 import com.ng.apersist.ObjectCreator;
 import com.ng.apersist.SQLBuilder;
 import com.ng.apersist.interpreter.AnnotationInterpreter;
 import com.ng.apersist.util.MethodNotFound;
 import com.ng.apersist.util.NoPersistenceClassException;
 import com.ng.apersist.util.ValueExtractor;
+import com.ng.apersist.util.ValueHandler;
 
 /**
  * Supertype for DAOs. Supplies the insertion, update, delete and selection of
@@ -51,14 +56,12 @@ public abstract class DAO<T> {
 	 */
 	public List<T> loadAll() {
 		List<T> all = new ArrayList<T>();
-		ObjectCreator<T> oc = new ObjectCreator<T>(getParameterType());
 		try {
 			Cursor c = database.getWriteableDb().rawQuery(
 					SQLBuilder.createSelectSql(null, getParameterType()), null);
 			if (c.moveToFirst()) {
 				do {
-					all.add(oc.createNewObject(ValueExtractor.extractToMap(c,
-							getParameterType())));
+					all.add(createObject(c));
 				} while (c.moveToNext());
 			}
 		} catch (NoPersistenceClassException e) {
@@ -140,24 +143,88 @@ public abstract class DAO<T> {
 		return null;
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private void insertOrUpdateChildren(T object) {
 		List<Field> complexFields = AnnotationInterpreter
 				.getComplexFields(getParameterType());
 		for (Field field : complexFields) {
 			try {
-				Method getter = AnnotationInterpreter.getGetter(
-						getParameterType().getMethods(), field);
-				Object subObject = getter.invoke(object);
-				DAO daoForSubType = DaoManager.getInstance().getDaoForType(
-						getter.invoke(object).getClass());
-				daoForSubType.insertOrUpdate(subObject);
+
+				if (!AnnotationInterpreter.isToMany(field))
+					insertOrUpdateCompelxFieldWithToOneRealtion(object, field);
+				else
+					insertOrUpdateComplexFieldWithToManyRealation(object, field);
+
 			} catch (IllegalAccessException | IllegalArgumentException
-					| InvocationTargetException | MethodNotFound e) {
+					| InvocationTargetException | MethodNotFound
+					| NoIterableTypeAsToManyRelationException
+					| NoPersistenceClassException
+					| PersistentObjectExpectedException e) {
 				Log.e(DAO.class.getName(), e.getMessage());
 			}
 		}
 
+	}
+
+	private void insertOrUpdateComplexFieldWithToManyRealation(T object,
+			Field field) throws MethodNotFound, IllegalAccessException,
+			IllegalArgumentException, InvocationTargetException,
+			NoIterableTypeAsToManyRelationException,
+			NoPersistenceClassException, PersistentObjectExpectedException {
+		Object subObject = ValueHandler.getValueOfField(object, field);
+		if (subObject == null) {
+
+		} else if (!(subObject instanceof Iterable)) {
+			throw new NoIterableTypeAsToManyRelationException(
+					subObject.getClass());
+		} else {
+			Iterable<?> iterabeSubObject = (Iterable<?>) subObject;
+			Iterator<?> subObjectIterator = iterabeSubObject.iterator();
+			HelperDao<?> helperDao = HelperDaoManager
+					.getDAOForTable(AnnotationInterpreter.getHelperTable(
+							getParameterType(), field));
+			Object objectId = getIdOfObject(object);
+			Collection<?> allToManyObjects = helperDao.loadAll(String
+					.valueOf(objectId));
+			while (subObjectIterator.hasNext()) {
+				Object nestedObject = subObjectIterator.next();
+				checkIfPersistent(nestedObject);
+				Object subObjectId = getIdOfObject(nestedObject);
+				if (!allToManyObjects.contains(nestedObject)) {
+					helperDao.insert(String.valueOf(objectId),
+							String.valueOf(subObjectId));
+				}
+			}
+		}
+	}
+
+	private void checkIfPersistent(Object nestedObject)
+			throws PersistentObjectExpectedException {
+		DAO<?> daoForSubtype = DaoManager.getInstance().getDaoForType(
+				nestedObject.getClass());
+		Object persistentObject = daoForSubtype
+				.load(getIdOfObject(nestedObject));
+		if (persistentObject == null) {
+			throw new PersistentObjectExpectedException(nestedObject);
+		} else if (!ObjectComparator.areEqual(nestedObject, persistentObject)) {
+			throw new PersistentObjectExpectedException(nestedObject);
+		}
+	}
+
+	private Object getIdOfObject(Object object) {
+		Field idField = AnnotationInterpreter.getIdField(object.getClass());
+		return ValueHandler.getValueOfField(object, idField);
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private void insertOrUpdateCompelxFieldWithToOneRealtion(T object,
+			Field field) throws MethodNotFound, IllegalAccessException,
+			IllegalArgumentException, InvocationTargetException {
+		Method getter = AnnotationInterpreter.getGetter(getParameterType()
+				.getMethods(), field);
+		Object subObject = getter.invoke(object);
+		DAO daoForSubType = DaoManager.getInstance().getDaoForType(
+				getter.invoke(object).getClass());
+		daoForSubType.insertOrUpdate(subObject);
 	}
 
 	/**
@@ -212,13 +279,35 @@ public abstract class DAO<T> {
 					SQLBuilder.createSelectSql(columnToValueMap,
 							getParameterType()), null);
 			if (loaded.moveToFirst())
-				return new ObjectCreator<T>(getParameterType())
-						.createNewObject(ValueExtractor.extractToMap(loaded,
-								getParameterType()));
+				return createObject(loaded);
 		} catch (NoPersistenceClassException e) {
 			Log.e("Database", e.getMessage());
 		}
 		return null;
+	}
+
+	private T createObject(Cursor loaded) throws NoPersistenceClassException {
+		Map<String, String> extractedSimpleFields = ValueExtractor
+				.extractToMap(loaded, getParameterType());
+		String idValue = loaded.getString(loaded
+				.getColumnIndex(AnnotationInterpreter
+						.getIdColumn(getParameterType())));
+		if (AnnotationInterpreter.hasToManyFields(getParameterType()))
+			extractedSimpleFields.putAll(loadToManyRelations(idValue));
+		return new ObjectCreator<T>(getParameterType())
+				.createNewObject(extractedSimpleFields);
+	}
+
+	private Map<String, String> loadToManyRelations(String idFieldValue)
+			throws NoPersistenceClassException {
+		Map<String, String> toManyIds = new HashMap<String, String>();
+		List<Field> toManyFields = AnnotationInterpreter
+				.getToManyFields(getParameterType());
+		for (Field field : toManyFields) {
+			toManyIds.put(AnnotationInterpreter.getHelperTable(
+					getParameterType(), field), idFieldValue);
+		}
+		return toManyIds;
 	}
 
 	abstract protected Class<T> getParameterType();

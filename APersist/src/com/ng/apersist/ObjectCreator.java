@@ -11,6 +11,7 @@ import android.util.Log;
 import com.ng.apersist.dao.DAO;
 import com.ng.apersist.dao.DaoManager;
 import com.ng.apersist.interpreter.AnnotationInterpreter;
+import com.ng.apersist.util.NoPersistenceClassException;
 import com.ng.apersist.util.ValueHandler;
 
 public class ObjectCreator<T> {
@@ -52,17 +53,17 @@ public class ObjectCreator<T> {
 				}
 				setter.invoke(newInstance, value);
 			} catch (IllegalAccessException | IllegalArgumentException
-					| InvocationTargetException e) {
-				e.printStackTrace();
+					| InvocationTargetException | NoPersistenceClassException e) {
+				Log.e("DAO", "Cannot set values");
 			}
 		}
 	}
 
 	private Collection<?> getCollectionOfToManyTarget(
-			Map<String, String> columnToValueMap, Field field) {
+			Map<String, String> columnToValueMap, Field field) throws NoPersistenceClassException {
 		String table = "";
 		for (String tablename : columnToValueMap.keySet()) {
-			if(tablename.contains("2" + field.getType().getTypeParameters()[0])){
+			if(tablename.equals(AnnotationInterpreter.getHelperTable(parameterType, field))){
 				table = tablename;
 				break;
 			}

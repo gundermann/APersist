@@ -1,1 +1,16 @@
+com.ng.apersist
+com.ng.apersist.annotation
 com.ng.apersist.dao
+com.ng.apersist.dao.test
+com.ng.apersist.dao.test.mock
+com.ng.apersist.dao.test.testpackage
+com.ng.apersist.dao.test.testpackage.subpackage
+com.ng.apersist.interpreter
+com.ng.apersist.test
+com.ng.apersist.test.mock
+com.ng.apersist.test.testpackage
+com.ng.apersist.test.testpackage.subpackage
+com.ng.apersist.util
+com.ng.apersist.util.test
+com.ng.apersist.util.test.testpackage
+com.ng.apersist.util.test.testpackage.subpackage

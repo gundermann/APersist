@@ -7,6 +7,8 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 
 import android.annotation.SuppressLint;
 import android.util.Log;
@@ -126,6 +128,18 @@ public class ValueHandler {
 			return Date.class;
 		else
 			return String.class;
+	}
+
+	public static String convertIterableToString(List<?> iterable) {
+		StringBuilder sb = new StringBuilder();
+		Iterator<?> i = iterable.iterator();
+		sb.append(i.next().toString());
+		while(i.hasNext()){
+			sb.append(";");
+			Object next = i.next();
+			sb.append(next.toString());
+		}
+		return sb.toString();
 	}
 
 }
