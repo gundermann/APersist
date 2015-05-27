@@ -83,7 +83,8 @@ public class ValueHandler {
 	}
 
 	public static Object convertTypeFromString(Class<?> type,
-			String stringToConvert) {
+			String stringToConvert) throws TypeNotSupportedException {
+		Log.i("VALUES", "Try to convert String to "+ type.getSimpleName());
 		if (stringToConvert == null)
 			return null;
 		else if (type.isEnum())
@@ -96,8 +97,11 @@ public class ValueHandler {
 			return stringToConvert;
 		else if (type == Boolean.class)
 			return Boolean.valueOf(stringToConvert);
-		// then it is complex
-		return Long.valueOf(stringToConvert);
+		else if (type == Integer.class)
+			return Integer.valueOf(stringToConvert);
+		else if (type == Double.class)
+			return Double.valueOf(stringToConvert);
+		throw new TypeNotSupportedException(type);
 	}
 
 	private static Object convertToEnum(Class<?> enumType,

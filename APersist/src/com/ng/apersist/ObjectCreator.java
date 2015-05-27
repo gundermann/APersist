@@ -12,6 +12,7 @@ import com.ng.apersist.dao.DAO;
 import com.ng.apersist.dao.DaoManager;
 import com.ng.apersist.interpreter.AnnotationInterpreter;
 import com.ng.apersist.util.NoPersistenceClassException;
+import com.ng.apersist.util.TypeNotSupportedException;
 import com.ng.apersist.util.ValueHandler;
 
 public class ObjectCreator<T> {
@@ -23,6 +24,9 @@ public class ObjectCreator<T> {
 	}
 
 	public T createNewObject(Map<String, String> columnToValueMap) {
+		Log.i("Creator",
+				"Try to create object for class: "
+						+ parameterType.getSimpleName());
 		T newInstance = null;
 		try {
 			newInstance = parameterType.newInstance();
@@ -34,9 +38,11 @@ public class ObjectCreator<T> {
 	}
 
 	private void fillObject(T newInstance, Map<String, String> columnToValueMap) {
+		Log.i("Creator", "Try to fill object");
 		Map<Field, Method> setters = AnnotationInterpreter
 				.getSetterWithField(parameterType);
 		for (Field field : setters.keySet()) {
+			Log.i("Creator", "Try to fill field: " + field.getName());
 			Method setter = setters.get(field);
 			try {
 				Object value;
@@ -50,11 +56,12 @@ public class ObjectCreator<T> {
 				} else if (AnnotationInterpreter.isToMany(field)) {
 					value = getCollectionOfToManyTarget(columnToValueMap, field);
 				} else {
-					value = getValueFromMap(columnToValueMap, field, field.getType());
+					value = getValueFromMap(columnToValueMap, field,
+							field.getType());
 				}
 				setter.invoke(newInstance, value);
 			} catch (IllegalAccessException | IllegalArgumentException
-					| InvocationTargetException | NoPersistenceClassException e) {
+					| InvocationTargetException | NoPersistenceClassException | TypeNotSupportedException e) {
 				Log.e("Creator", "Cannot set values");
 			}
 		}
@@ -76,7 +83,7 @@ public class ObjectCreator<T> {
 	}
 
 	private Object getValueFromMap(Map<String, String> columnToValueMap,
-			Field field, Class<?> type) {
+			Field field, Class<?> type) throws TypeNotSupportedException {
 		String column = AnnotationInterpreter.getColumnToField(field);
 		String value = columnToValueMap.get(column);
 		return ValueHandler.convertTypeFromString(type, value);
