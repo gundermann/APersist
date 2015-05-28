@@ -61,7 +61,7 @@ public class SQLBuilder {
 	private static String createSqlValuesUpdatePart(Object object) {
 		StringBuilder sb = new StringBuilder(" set  ");
 		List<Field> allColumnFields = AnnotationInterpreter
-				.getAllColumnFields(object.getClass());
+				.getAllColumnFieldsWithoutID(object.getClass());
 		for (Iterator<Field> iterator = allColumnFields.iterator(); iterator
 				.hasNext();) {
 			Field field = iterator.next();

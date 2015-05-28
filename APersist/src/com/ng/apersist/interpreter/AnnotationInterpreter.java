@@ -212,4 +212,18 @@ public class AnnotationInterpreter {
 		return getColumnToField(getTargetField(field));
 	}
 
+	public static List<Field> getAllColumnFieldsWithoutID(
+			Class<? extends Object> persistenceClass) {
+		List<Field> columnFields = new ArrayList<Field>();
+		Field[] declaredFields = persistenceClass.getDeclaredFields();
+		for (int i = 0; i < declaredFields.length; i++) {
+				Column annotation = declaredFields[i]
+						.getAnnotation(Column.class);
+				if (annotation != null)
+					columnFields.add(declaredFields[i]);
+
+		}
+		return columnFields;
+	}
+
 }
