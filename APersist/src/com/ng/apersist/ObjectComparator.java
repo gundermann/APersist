@@ -23,7 +23,7 @@ public class ObjectComparator {
 				Object value2 = ValueHandler.getValueOfField(o2, field);
 				
 				if (value1 instanceof Iterable) {
-					if (!areIterablesEqual((Iterable) value1, (Iterable) value2))
+					if (!areIterablesEqual((Iterable) value1, (Iterable) value2) && !areIterablesEqual((Iterable) value2, (Iterable) value1))
 						return false;
 				} else if (!AnnotationInterpreter.isSimpleField(field)) {
 					if (!areEqual(value1, value2))
@@ -39,14 +39,20 @@ public class ObjectComparator {
 
 	private static boolean areIterablesEqual(Iterable value1, Iterable value2) {
 		Iterator iterator1 = value1.iterator();
-		Iterator iterator2 = value2.iterator();
 		while (iterator1.hasNext()) {
+			boolean equalFound = false;
 			Object nestedValue1 = iterator1.next();
-			if (!iterator2.hasNext())
+			Iterator iterator2 = value2.iterator();
+			while(iterator2.hasNext()){
+				Object nestedValue2 = iterator2.next();
+				if (areEqual(nestedValue1, nestedValue2)){
+					equalFound = true;
+					break;
+				}
+			}
+			if (!equalFound) {
 				return false;
-			Object nestedValue2 = iterator2.next();
-			if (!areEqual(nestedValue1, nestedValue2))
-				return false;
+			}
 		}
 		return true;
 	}
