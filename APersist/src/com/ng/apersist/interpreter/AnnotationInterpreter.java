@@ -118,8 +118,9 @@ public class AnnotationInterpreter {
 			if (methodName.substring(0, 3).equals("get")
 					&& methodName.substring(3).equals(fieldName))
 				return methods[i];
-			else if (methodName.substring(0, 2).equals("is")
-					&& methodName.equals(fieldName))
+			else if ((methodName.substring(0, 2).equals("is")
+					&& methodName.equals(fieldName)) || (methodName.substring(0, 2).equals("is")
+					&& methodName.substring(2).equals(fieldName)))
 				return methods[i];
 		}
 		throw new MethodNotFound("getter for " + fieldName);
