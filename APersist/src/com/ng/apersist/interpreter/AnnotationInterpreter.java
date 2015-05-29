@@ -220,7 +220,7 @@ public class AnnotationInterpreter {
 		for (int i = 0; i < declaredFields.length; i++) {
 				Column annotation = declaredFields[i]
 						.getAnnotation(Column.class);
-				if (annotation != null)
+				if (annotation != null || isToOne(declaredFields[i]))
 					columnFields.add(declaredFields[i]);
 
 		}
