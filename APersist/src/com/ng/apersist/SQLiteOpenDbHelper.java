@@ -40,6 +40,7 @@ public class SQLiteOpenDbHelper extends SQLiteOpenHelper {
 		} catch (SQLException | NoPersistenceClassException e) {
 			Log.e("DB creation", e.getMessage());
 		}
+		Log.i("DB creation", "created");
 	}
 
 	@Override
@@ -60,6 +61,8 @@ public class SQLiteOpenDbHelper extends SQLiteOpenHelper {
 		} catch (SQLException | NoPersistenceClassException e) {
 			Log.e("DB update", e.getMessage());
 		}
+		Log.i("DB update", "update from " + oldVersion + " to " + newVersion);
 		onCreate(db);
+		
 	}
 }
