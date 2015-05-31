@@ -62,7 +62,7 @@ public class ObjectCreator<T> {
 				setter.invoke(newInstance, value);
 			} catch (IllegalAccessException | IllegalArgumentException
 					| InvocationTargetException | NoPersistenceClassException | TypeNotSupportedException e) {
-				Log.e("Creator", "Cannot set values");
+				Log.e("Creator", "Cannot set values: " + e.getMessage());
 			}
 		}
 	}

@@ -95,8 +95,8 @@ public class ValueHandler {
 			return Long.valueOf(stringToConvert);
 		else if (type == String.class)
 			return stringToConvert;
-		else if (type == Boolean.class)
-			return Boolean.valueOf(stringToConvert);
+		else if (type == Boolean.class || type == boolean.class)
+			return Boolean.parseBoolean(stringToConvert);
 		else if (type == Integer.class)
 			return Integer.valueOf(stringToConvert);
 		else if (type == Double.class)
