@@ -1,11 +1,11 @@
-package com.ng.apersist;
+package com.ng.apersist.util;
 
 import java.util.HashSet;
 import java.util.Set;
 
+import com.ng.apersist.DbRegistry;
 import com.ng.apersist.annotation.PersistenceClass;
 import com.ng.apersist.dao.DAO;
-import com.ng.apersist.util.ClassCollector;
 
 public class PersistenceClassCollector {
 

@@ -14,14 +14,12 @@ import android.database.Cursor;
 import android.util.Log;
 
 import com.ng.apersist.Database;
-import com.ng.apersist.HelperDao;
-import com.ng.apersist.HelperDaoManager;
-import com.ng.apersist.ObjectComparator;
-import com.ng.apersist.ObjectCreator;
-import com.ng.apersist.SQLBuilder;
-import com.ng.apersist.interpreter.AnnotationInterpreter;
+import com.ng.apersist.annotation.AnnotationInterpreter;
+import com.ng.apersist.query.SQLBuilder;
 import com.ng.apersist.util.MethodNotFound;
 import com.ng.apersist.util.NoPersistenceClassException;
+import com.ng.apersist.util.ObjectComparator;
+import com.ng.apersist.util.ObjectCreator;
 import com.ng.apersist.util.ValueExtractor;
 import com.ng.apersist.util.ValueHandler;
 

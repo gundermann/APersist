@@ -1,4 +1,4 @@
-package com.ng.apersist.interpreter;
+package com.ng.apersist.annotation;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -11,14 +11,6 @@ import java.util.Map;
 import android.annotation.SuppressLint;
 import android.util.Log;
 
-import com.ng.apersist.annotation.Column;
-import com.ng.apersist.annotation.Id;
-import com.ng.apersist.annotation.PersistenceClass;
-import com.ng.apersist.annotation.Table;
-import com.ng.apersist.annotation.ToMany;
-import com.ng.apersist.annotation.ToManyMinOne;
-import com.ng.apersist.annotation.ToOne;
-import com.ng.apersist.annotation.ToOneOrNone;
 import com.ng.apersist.util.MethodNotFound;
 import com.ng.apersist.util.NoPersistenceClassException;
 

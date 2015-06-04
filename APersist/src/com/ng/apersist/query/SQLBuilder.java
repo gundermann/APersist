@@ -1,4 +1,4 @@
-package com.ng.apersist;
+package com.ng.apersist.query;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.ng.apersist.annotation.AnnotationInterpreter;
 import com.ng.apersist.annotation.ToMany;
-import com.ng.apersist.interpreter.AnnotationInterpreter;
 import com.ng.apersist.util.NoPersistenceClassException;
 import com.ng.apersist.util.ValueHandler;
 

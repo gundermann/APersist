@@ -13,9 +13,9 @@ import org.junit.Test;
 
 import android.annotation.SuppressLint;
 
-import com.ng.apersist.ObjectCreator;
 import com.ng.apersist.test.mock.ColumnToValueMapCreator;
 import com.ng.apersist.test.testpackage.subpackage.TestClassThree;
+import com.ng.apersist.util.ObjectCreator;
 
 @SuppressLint("SimpleDateFormat")
 public class ObjectCreatorTest {

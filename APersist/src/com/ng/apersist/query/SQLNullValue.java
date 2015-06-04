@@ -1,4 +1,4 @@
-package com.ng.apersist;
+package com.ng.apersist.query;
 
 public class SQLNullValue {
 

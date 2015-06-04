@@ -13,8 +13,8 @@ import java.util.List;
 import android.annotation.SuppressLint;
 import android.util.Log;
 
-import com.ng.apersist.SQLNullValue;
-import com.ng.apersist.interpreter.AnnotationInterpreter;
+import com.ng.apersist.annotation.AnnotationInterpreter;
+import com.ng.apersist.query.SQLNullValue;
 
 public class ValueHandler {
 

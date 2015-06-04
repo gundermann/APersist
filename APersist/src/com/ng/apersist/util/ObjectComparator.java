@@ -1,12 +1,11 @@
-package com.ng.apersist;
+package com.ng.apersist.util;
 
 import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import com.ng.apersist.interpreter.AnnotationInterpreter;
-import com.ng.apersist.util.ValueHandler;
+import com.ng.apersist.annotation.AnnotationInterpreter;
 
 public class ObjectComparator {
 

@@ -1,4 +1,4 @@
-package com.ng.apersist;
+package com.ng.apersist.dao;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -6,7 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.ng.apersist.dao.DAO;
+import com.ng.apersist.Database;
+import com.ng.apersist.query.SQLBuilder;
 
 import android.database.Cursor;
 

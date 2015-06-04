@@ -1,6 +1,8 @@
 package com.ng.apersist;
 
 import com.ng.apersist.dao.DaoManager;
+import com.ng.apersist.dao.HelperDaoManager;
+import com.ng.apersist.query.SQLiteOpenDbHelper;
 
 import android.content.Context;
 import android.database.Cursor;

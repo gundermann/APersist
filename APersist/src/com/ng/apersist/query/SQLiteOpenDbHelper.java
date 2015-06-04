@@ -1,4 +1,4 @@
-package com.ng.apersist;
+package com.ng.apersist.query;
 
 import java.util.List;
 import java.util.Map;
@@ -10,7 +10,9 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import com.ng.apersist.DbRegistry;
 import com.ng.apersist.util.NoPersistenceClassException;
+import com.ng.apersist.util.PersistenceClassCollector;
 
 public class SQLiteOpenDbHelper extends SQLiteOpenHelper {
 

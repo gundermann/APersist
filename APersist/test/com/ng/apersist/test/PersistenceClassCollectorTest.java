@@ -6,9 +6,9 @@ import java.util.Set;
 
 import org.junit.Test;
 
-import com.ng.apersist.PersistenceClassCollector;
 import com.ng.apersist.test.testpackage.TestClassTwo;
 import com.ng.apersist.test.testpackage.subpackage.TestClassThree;
+import com.ng.apersist.util.PersistenceClassCollector;
 
 public class PersistenceClassCollectorTest {
 
