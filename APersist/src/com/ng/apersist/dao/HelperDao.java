@@ -19,7 +19,8 @@ public class HelperDao<T> {
 	private DAO<T> foreignDao;
 	private String foreignIdColumn;
 
-	public HelperDao(String table, String idColumn, String foreignIdColumn, Database db, DAO<T> foreignDao) {
+	public HelperDao(String table, String idColumn, String foreignIdColumn,
+			Database db, DAO<T> foreignDao) {
 		this.table = table;
 		this.idColumn = idColumn;
 		this.foreignIdColumn = foreignIdColumn;
@@ -29,7 +30,8 @@ public class HelperDao<T> {
 
 	public Collection<T> loadAll(String id) {
 		Map<String, Object> columnToValueMap = fillWhereMapWithId(id);
-		Cursor cursor = db.execQuery(SQLBuilder.createSelectSql(columnToValueMap , table));
+		Cursor cursor = db.execQuery(SQLBuilder.createSelectSql(
+				columnToValueMap, table));
 		List<Long> foreignIds = extractCursor(cursor);
 		return getForeignObjects(foreignIds);
 	}
@@ -44,8 +46,8 @@ public class HelperDao<T> {
 
 	private List<Long> extractCursor(Cursor cursor) {
 		List<Long> ids = new ArrayList<Long>();
-		if(cursor.moveToFirst()){
-			while(!cursor.isAfterLast()){
+		if (cursor.moveToFirst()) {
+			while (!cursor.isAfterLast()) {
 				ids.add(cursor.getLong(1));
 				cursor.moveToNext();
 			}
@@ -56,16 +58,23 @@ public class HelperDao<T> {
 	private Map<String, Object> fillWhereMapWithId(String id) {
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put(idColumn, id);
-		return map ;
+		return map;
 	}
 
-
 	public void insert(String objectId, String subObjectId) {
-		db.getWriteableDb().execSQL(SQLBuilder.createInsertSqlForHelper(table, idColumn, objectId, foreignIdColumn, subObjectId));
+		db.getWriteableDb().execSQL(
+				SQLBuilder.createInsertSqlForHelper(table, idColumn, objectId,
+						foreignIdColumn, subObjectId));
 	}
 
 	public DAO<T> getForeignDao() {
 		return foreignDao;
+	}
+
+	public void delete(String objectId, String subObjectId) {
+		db.getWriteableDb().execSQL(
+				SQLBuilder.createDeleteSqlForHelper(table, idColumn, objectId,
+						foreignIdColumn, subObjectId));
 	}
 
 }

@@ -181,7 +181,6 @@ public abstract class DAO<T> {
 					subObject.getClass());
 		} else {
 			Iterable<?> iterabeSubObject = (Iterable<?>) subObject;
-			Iterator<?> subObjectIterator = iterabeSubObject.iterator();
 			HelperDao<?> helperDao = HelperDaoManager
 					.getDAOForTable(AnnotationInterpreter.getHelperTable(
 							getParameterType(), field));
@@ -190,15 +189,40 @@ public abstract class DAO<T> {
 				objectId = generateNextId();
 			Collection<?> allToManyObjects = helperDao.loadAll(String
 					.valueOf(objectId));
-			while (subObjectIterator.hasNext()) {
-				Object nestedObject = subObjectIterator.next();
-				checkIfPersistent(nestedObject);
-				Object subObjectId = getIdOfObject(nestedObject);
-				if (!ObjectComparator.containsById(allToManyObjects,
-						nestedObject)) {
-					helperDao.insert(String.valueOf(objectId),
-							String.valueOf(subObjectId));
-				}
+			deleteOutdatedRelations(allToManyObjects,
+					iterabeSubObject.iterator(), objectId, helperDao);
+			refreshNewRelations(iterabeSubObject.iterator(), allToManyObjects,
+					objectId, helperDao);
+		}
+	}
+
+	private void deleteOutdatedRelations(Collection<?> allToManyObjects,
+			Iterator<?> subObjectIterator, Object objectId,
+			HelperDao<?> helperDao) {
+		List<Object> nestedObjects = new ArrayList<Object>();
+		while (subObjectIterator.hasNext()) {
+			Object nestedObject = subObjectIterator.next();
+			nestedObjects.add(nestedObject);
+		}
+		for (Object toManyObject : allToManyObjects) {
+			if (!ObjectComparator.containsById(nestedObjects, toManyObject)) {
+				Object subObjectId = getIdOfObject(toManyObject);
+				helperDao.delete(String.valueOf(objectId),
+						String.valueOf(subObjectId));
+			}
+		}
+	}
+
+	private void refreshNewRelations(Iterator<?> subObjectIterator,
+			Collection<?> allToManyObjects, Object objectId,
+			HelperDao<?> helperDao) throws PersistentObjectExpectedException {
+		while (subObjectIterator.hasNext()) {
+			Object nestedObject = subObjectIterator.next();
+			checkIfPersistent(nestedObject);
+			Object subObjectId = getIdOfObject(nestedObject);
+			if (!ObjectComparator.containsById(allToManyObjects, nestedObject)) {
+				helperDao.insert(String.valueOf(objectId),
+						String.valueOf(subObjectId));
 			}
 		}
 	}
