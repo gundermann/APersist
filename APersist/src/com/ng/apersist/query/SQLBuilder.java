@@ -349,12 +349,10 @@ public class SQLBuilder {
 	}
 
 	public static String createDeleteSqlForHelper(String table,
-			String idColumn, String objectId, String foreignIdColumn,
-			String subObjectId) {
+			String idColumn, Object objectId) {
 		StringBuilder sb = new StringBuilder(" delete from ");
 		sb.append(table).append(" where ").append(idColumn).append(" = ")
-				.append(objectId).append(" and ").append(foreignIdColumn)
-				.append(" = ").append(subObjectId).append(";");
+		.append(objectId).append(";");
 		return sb.toString();
 	}
 }

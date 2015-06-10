@@ -71,10 +71,9 @@ public class HelperDao<T> {
 		return foreignDao;
 	}
 
-	public void delete(String objectId, String subObjectId) {
+	public void deleteAll(Object objectId) {
 		db.getWriteableDb().execSQL(
-				SQLBuilder.createDeleteSqlForHelper(table, idColumn, objectId,
-						foreignIdColumn, subObjectId));
+				SQLBuilder.createDeleteSqlForHelper(table, idColumn, objectId));		
 	}
 
 }
