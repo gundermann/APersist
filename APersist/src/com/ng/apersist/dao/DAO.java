@@ -188,7 +188,7 @@ public abstract class DAO<T> {
 			if (objectId == null)
 				objectId = generateNextId();
 			
-			helperDao.deleteAll(objectId);
+			helperDao.deleteAll(String.valueOf(objectId));
 			addRelations(iterabeSubObject.iterator(), 
 					objectId, helperDao);
 		}
