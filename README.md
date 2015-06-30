@@ -14,8 +14,8 @@ For a simple example see: <a href="http://androidappexperience.blogspot.de/2015/
 
 @Column - use to mark a field as usual column
 
-@ToOne - use to mark a field as a to-zero-or-one-relation 
+@ToOne -use to mark a field as a to-one-relation 
 
-@ToOneOrNone - use to mark a field as a to-one-relation 
+@ToOneOrNone -use to mark a field as a to-zero-or-one-relation 
 
-@ToMany - use to mark a field as a to-zero-or-Many-relation 
+@ToMany - use to mark a field as a to-Many-relation 
