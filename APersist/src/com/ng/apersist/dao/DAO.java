@@ -249,16 +249,16 @@ public abstract class DAO<T> {
 	 * 
 	 * @param persistentObject
 	 */
-	public T insertOrUpdate(T object) {
+	public T insertOrUpdate(T persistentObject) {
 		Field idField = AnnotationInterpreter.getIdField(getParameterType());
 		try {
 			Method getter = AnnotationInterpreter.getGetter(getParameterType()
 					.getMethods(), idField);
-			Object idFieldValue = getter.invoke(object);
+			Object idFieldValue = getter.invoke(persistentObject);
 			if (idFieldValue != null && load(idFieldValue) != null) {
-				return update(object);
+				return update(persistentObject);
 			}
-			return insert(object);
+			return insert(persistentObject);
 		} catch (IllegalAccessException | IllegalArgumentException
 				| InvocationTargetException | MethodNotFound e) {
 			Log.e(DAO.class.getName(), e.getMessage());

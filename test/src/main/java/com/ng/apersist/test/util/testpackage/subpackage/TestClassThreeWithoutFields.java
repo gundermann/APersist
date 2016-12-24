@@ -1,5 +1,5 @@
 package com.ng.apersist.test.util.testpackage.subpackage;
 
-public class TestClassThree {
+public class TestClassThreeWithoutFields {
 
 }

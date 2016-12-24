@@ -19,7 +19,7 @@ public class DaoTest {
 
 	@Test
 	public void test() {
-//		TestClassThree testObject = new TestClassThree();
+//		TestClassThreeWithoutFields testObject = new TestClassThreeWithoutFields();
 //		testObject.setName("test");
 //		testObject.setTimestamp(new Date());
 //		testObject = dao.insertOrUpdate(testObject);

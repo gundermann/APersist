@@ -13,7 +13,7 @@ public class DaoManagerTest {
 	@Test
 	public void test() {
 //		DaoManager.init(null, this.getClass().getPackage(), null);
-//		DAO<?> daoForType = DaoManager.getInstance().getDaoForType(TestClassThree.class);
+//		DAO<?> daoForType = DaoManager.getInstance().getDaoForType(TestClassThreeWithoutFields.class);
 //		assertTrue(daoForType != null);
 	}
 
