@@ -18,7 +18,7 @@ import com.ng.apersist.query.SQLNullValue;
 
 public class ValueHandler {
 
-	private static final String DATE_PATTERN = "dd.MM.yyy-hh:mm:ss";
+	private static final String DATE_PATTERN = "dd.MM.yyyy-hh:mm:ss";
 
 	public static String getDatabaseTypeAsSQLValueFromField(Object object,
 			Field field) {
@@ -47,11 +47,11 @@ public class ValueHandler {
 	}
 
 	@SuppressLint("SimpleDateFormat")
-	public static Object convertTypeToDatabaseType(Object type) {
+	private static Object convertTypeToDatabaseType(Object type) {
 		if (type == null) {
 			return new SQLNullValue();
 		} else if (isNumberType(type.getClass()))
-			return (Number) type;
+			return type;
 		else if (isDateType(type.getClass())) {
 			SimpleDateFormat sdf = new SimpleDateFormat(DATE_PATTERN);
 			return sdf.format((Date) type);
@@ -59,11 +59,11 @@ public class ValueHandler {
 			return type.toString();
 	}
 
-	private static boolean isDateType(Class<? extends Object> class1) {
+	private static boolean isDateType(Class<?> class1) {
 		return class1.equals(Date.class);
 	}
 
-	private static boolean isNumberType(Class<? extends Object> class1) {
+	private static boolean isNumberType(Class<?> class1) {
 		return class1.equals(Integer.class)
 				|| class1.getSimpleName().equals("Long")
 				|| class1.equals(int.class) || class1.equals(double.class)
@@ -107,9 +107,9 @@ public class ValueHandler {
 	private static Object convertToEnum(Class<?> enumType,
 			String stringToConvert) {
 		Object[] enumConstants = enumType.getEnumConstants();
-		for (int i = 0; i < enumConstants.length; i++) {
-			if (enumConstants[i].toString().equals(stringToConvert))
-				return enumConstants[i];
+		for (Object o : enumConstants) {
+			if (o.toString().equals(stringToConvert))
+				return o;
 		}
 
 		// TODO exception
