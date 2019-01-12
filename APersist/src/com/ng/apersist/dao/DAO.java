@@ -155,7 +155,7 @@ public abstract class DAO<T> {
             Iterator<Object[]> maxIdIterator = database.createQuery(SQLBuilder
                     .createMaxIdSelectionSql(getParameterType())).getResult().iterator();
 			if (maxIdIterator.hasNext())
-				return Long.class.cast(maxIdIterator.next()[0]);
+				return Integer.class.cast(maxIdIterator.next()[0]).longValue();
 		} catch (NoPersistenceClassException e) {
 			Log.e("Database", e.getMessage());
 		}
