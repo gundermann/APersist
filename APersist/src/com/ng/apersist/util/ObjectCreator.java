@@ -77,7 +77,7 @@ public class ObjectCreator<T> {
 			}
 		}
 		String id = columnToValueMap.get(table);
-		return HelperDaoManager.getDAOForTable(table).loadAll(id);
+		return HelperDaoManager.INSTANCE.getDAOForTable(table).loadAll(id);
 	}
 
 	private Object getValueFromMap(Map<String, String> columnToValueMap,

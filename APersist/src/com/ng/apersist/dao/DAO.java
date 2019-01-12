@@ -48,7 +48,19 @@ public abstract class DAO<T> {
 		this.database = database;
 	}
 
-	/**
+
+    public Collection<T> loadFromCursor( Cursor cursor ) {
+        Collection<T> result = new ArrayList<>();
+        cursor.moveToFirst();
+        do {
+            result.add( createObject( cursor ) );
+        } while ( cursor.moveToNext() );
+
+        return result;
+    }
+
+
+    /**
 	 * Loads all Entries of T from DB.
 	 * 
 	 * @return List<T> allEntries
@@ -140,10 +152,10 @@ public abstract class DAO<T> {
 	public Long getMaxId() {
 		Log.i("DAO", "Try to get max id from "+ getParameterType().getSimpleName());
 		try {
-			Cursor maxIdCursor = database.execQuery(SQLBuilder
-					.createMaxIdSelectionSql(getParameterType()));
-			if (maxIdCursor.moveToFirst())
-				return maxIdCursor.getLong(0);
+            Iterator<Object[]> maxIdIterator = database.createQuery(SQLBuilder
+                    .createMaxIdSelectionSql(getParameterType())).getResult().iterator();
+			if (maxIdIterator.hasNext())
+				return Long.class.cast(maxIdIterator.next()[0]);
 		} catch (NoPersistenceClassException e) {
 			Log.e("Database", e.getMessage());
 		}
@@ -182,7 +194,7 @@ public abstract class DAO<T> {
 		} else {
 			Iterable<?> iterabeSubObject = (Iterable<?>) subObject;
 			HelperDao<?> helperDao = HelperDaoManager
-					.getDAOForTable(AnnotationInterpreter.getHelperTable(
+					.INSTANCE.getDAOForTable(AnnotationInterpreter.getHelperTable(
 							getParameterType(), field));
 			Object objectId = getIdOfObject(object);
 			if (objectId == null)
@@ -302,14 +314,19 @@ public abstract class DAO<T> {
 		return null;
 	}
 
-	private T createObject(Cursor loaded) throws NoPersistenceClassException {
+	public T createObject(Cursor loaded) {
 		Map<String, String> extractedSimpleFields = ValueExtractor
 				.extractToMap(loaded, getParameterType());
 		String idValue = loaded.getString(loaded
 				.getColumnIndex(AnnotationInterpreter
 						.getIdColumn(getParameterType())));
-		if (AnnotationInterpreter.hasToManyFields(getParameterType()))
-			extractedSimpleFields.putAll(loadToManyRelations(idValue));
+		if (AnnotationInterpreter.hasToManyFields(getParameterType())){
+			try {
+				extractedSimpleFields.putAll(loadToManyRelations(idValue));
+			} catch (NoPersistenceClassException npce){
+				Log.e("Database", npce.getMessage());
+			}
+		}
 		return new ObjectCreator<T>(getParameterType())
 				.createNewObject(extractedSimpleFields);
 	}

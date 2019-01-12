@@ -3,14 +3,15 @@ package com.ng.apersist;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
+import com.ng.apersist.query.NativeQuery;
+
 public interface Database {
 
 	/**
-	 * 
 	 * @param sql
-	 * @return the result of sql as android cursor
+	 * @return the native query
 	 */
-	public Cursor execQuery(String sql);
+	public NativeQuery createQuery(String sql );
 
 	/**
 	 * @return the wirteable database of the android database

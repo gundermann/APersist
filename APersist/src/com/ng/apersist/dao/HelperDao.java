@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.ng.apersist.Database;
+import com.ng.apersist.query.NativeQuery;
 import com.ng.apersist.query.SQLBuilder;
 
 import android.database.Cursor;
@@ -28,12 +29,11 @@ public class HelperDao<T> {
 		this.foreignDao = foreignDao;
 	}
 
+
 	public Collection<T> loadAll(String id) {
 		Map<String, Object> columnToValueMap = fillWhereMapWithId(id);
-		Cursor cursor = db.execQuery(SQLBuilder.createSelectSql(
-				columnToValueMap, table));
-		List<Long> foreignIds = extractCursor(cursor);
-		return getForeignObjects(foreignIds);
+		return db.createQuery(SQLBuilder.createSelectSql(
+				columnToValueMap, table)).getResult(foreignDao.getParameterType());
 	}
 
 	private Collection<T> getForeignObjects(List<Long> foreignIds) {

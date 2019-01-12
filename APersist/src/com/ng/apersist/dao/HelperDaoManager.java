@@ -16,15 +16,15 @@ import com.ng.apersist.annotation.ToMany;
 import com.ng.apersist.util.NoPersistenceClassException;
 import com.ng.apersist.util.PersistenceClassCollector;
 
-public class HelperDaoManager {
+public enum HelperDaoManager {
+INSTANCE;
+	private Map<String, HelperDao<?>> helperDAOs = new HashMap<String, HelperDao<?>>();
 
-	static Map<String, HelperDao<?>> helperDAOs = new HashMap<String, HelperDao<?>>();
-
-	public static HelperDao<?> getDAOForTable(String table) {
+	public HelperDao<?> getDAOForTable(String table) {
 		return helperDAOs.get(table);
 	}
 
-	public static void init(Database database, DbRegistry registry) {
+	public void init(Database database, DbRegistry registry) {
 		Set<Class<?>> classes = PersistenceClassCollector
 				.getFromRegistry(registry);
 		for (Class<?> clazz : classes) {
@@ -38,7 +38,7 @@ public class HelperDaoManager {
 		Log.i("DaoManager", "init HelperDaoManager");
 	}
 
-	private static void registerHelperDaoIfNecessary(Class<?> persistenceClass,
+	private void registerHelperDaoIfNecessary(Class<?> persistenceClass,
 			Database database, DbRegistry registry)
 			throws NoPersistenceClassException {
 		List<Field> allColumnFields = AnnotationInterpreter

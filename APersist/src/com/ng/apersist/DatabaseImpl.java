@@ -2,6 +2,7 @@ package com.ng.apersist;
 
 import com.ng.apersist.dao.DaoManager;
 import com.ng.apersist.dao.HelperDaoManager;
+import com.ng.apersist.query.NativeQuery;
 import com.ng.apersist.query.SQLiteOpenDbHelper;
 
 import android.content.Context;
@@ -16,7 +17,7 @@ class DatabaseImpl implements Database {
 	public DatabaseImpl(Context context, String name, DbRegistry registry, int version) {
 		helper = new SQLiteOpenDbHelper(context, name, registry, version );
 		DaoManager.init(this, registry);
-		HelperDaoManager.init(this, registry);
+		HelperDaoManager.INSTANCE.init(this, registry);
 	}
 
 
@@ -24,12 +25,13 @@ class DatabaseImpl implements Database {
 		return helper.getWritableDatabase();
 	}
 
-	/* (non-Javadoc)
-	 * @see com.ng.apersist.Database#execQuery(java.lang.String)
+	/*
+	 * (non-Javadoc)
+	 * @see com.ng.apersist.Database#createQuery(java.lang.String)
 	 */
 	@Override
-	public Cursor execQuery(String sql) {
-		return getWriteableDb().rawQuery(sql, null);
+	public NativeQuery createQuery( String sql ) {
+		return new NativeQuery( sql, getWriteableDb() );
 	}
 
 
